@@ -1,40 +1,73 @@
 #include "sds011.h"
 
-#define SDS011_SYNC 0xAA
+#define SDS011_FRAME_BEG 0xAA
+#define SDS011_FRAME_END 0xAB
 
 #define SDS011_CMD_QUERY 0xB4
 #define SDS011_CMD_REPLY 0xC5
 #define SDS011_DAT_REPLY 0xC0
 
+typedef enum {
+  STATE_BEG  = 0,
+  STATE_CMD  = 1,
+  STATE_DATA = 2,
+  STATE_CRC  = 3,
+  STATE_END  = 4
+} state_t;
+
 static uint8_t payload_len_by_cmd(uint8_t cmd);
 
-bool sds011_parser_parse(sds011_parser_t *parser, uint8_t byte) {
+sds011_parser_ret_t sds011_parser_parse(sds011_parser_t *parser, uint8_t byte) {
   switch (parser->state) {
-    case 0:
-      if (byte == SDS011_SYNC) {
-        parser->state++;
-      }
-      break;
-    case 1:
-      if ((parser->payload_len = payload_len_by_cmd(byte)) > 0) {
+    case STATE_BEG:
+      if (byte == SDS011_FRAME_BEG) {
         parser->state++;
       } else {
-        parser->state = 0;
+        sds011_parser_clear(parser);
+        parser->error = SDS011_PARSER_ERR_FRAME_BEG;
+        return SDS011_PARSER_RES_ERROR;
       }
       break;
-    case 2:
-      // payload
+    case STATE_CMD:
+      if ((parser->data_len = payload_len_by_cmd(byte)) > 0) {
+        parser->data_iter = 0;
+        parser->state++;
+      } else {
+        sds011_parser_clear(parser);
+        parser->error = SDS011_PARSER_ERR_CMD;
+        return SDS011_PARSER_RES_ERROR;
+      }
       break;
-    case 3:
-      // checksum
+    case STATE_DATA:
+      parser->data[parser->data_iter++] = byte;
+      parser->data_crc += byte;
+
+      if (parser->data_iter >= parser->data_len) {
+        parser->state++;
+      }
       break;
-    case 4:
-      // end frame
-      return true;
+    case STATE_CRC:
+      if (parser->data_crc == byte) {
+        parser->state++;
+      } else {
+        sds011_parser_clear(parser);
+        parser->error = SDS011_PARSER_ERR_CRC;
+        return SDS011_PARSER_RES_ERROR;
+      }
+      break;
+    case STATE_END:
+      if (byte == SDS011_FRAME_END) {
+        parser->state++;
+        return SDS011_PARSER_RES_READY;
+      } else {
+        sds011_parser_clear(parser);
+        parser->error = SDS011_PARSER_ERR_FRAME_END;
+        return SDS011_PARSER_RES_ERROR;
+      }
       break;
   }
 
-  return false;
+  return SDS011_PARSER_RES_RUNNING;
 }
 
 static uint8_t payload_len_by_cmd(uint8_t cmd) {
@@ -49,5 +82,7 @@ static uint8_t payload_len_by_cmd(uint8_t cmd) {
 
 void sds011_parser_clear(sds011_parser_t *parser) {
   parser->state = 0;
-  parser->payload_len = 0;
+  parser->data_len = 0;
+  parser->data_iter = 0;
+  parser->data_crc = 0;
 }
