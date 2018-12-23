@@ -1,5 +1,7 @@
 #include "sds011.h"
 
+#include <string.h>
+
 #define SDS011_FRAME_BEG 0xAA
 #define SDS011_FRAME_END 0xAB
 
@@ -83,21 +85,36 @@ static uint8_t payload_len_by_cmd(uint8_t cmd) {
   return 0;
 }
 
-sds011_msg_type_t sds011_parser_get_msg_type(sds011_parser_t const *parser) {
+static sds011_msg_type_t get_msg_type(sds011_parser_t const *parser);
+static void get_sample(sds011_parser_t const *parser, sds011_msg_t *msg);
+
+bool sds011_parser_get_msg(sds011_parser_t const *parser, sds011_msg_t *msg) {
+  memset(msg, 0, sizeof(sds011_msg_t));
+
+  msg->type = get_msg_type(parser);
+
+  if (msg->type == SDS011_MSG_TYPE_SAMPLE) {
+    get_sample(parser, msg);
+    return true;
+  }
+
+  return false;
+}
+
+static sds011_msg_type_t get_msg_type(sds011_parser_t const *parser) {
   if (parser->cmd == SDS011_DAT_REPLY) {
-    return SDS011_MSG_TYPE_DATA_VALUE;
+    return SDS011_MSG_TYPE_SAMPLE;
   }
 
   return parser->data[0];
 }
 
 
-sds011_msg_data_value_t sds011_parser_get_data_value(sds011_parser_t const *parser) {
-  sds011_msg_data_value_t value;
-  value.pm2_5     = VALUE16(parser->data[1], parser->data[0]);
-  value.pm10      = VALUE16(parser->data[3], parser->data[2]);
-  value.device_id = VALUE16(parser->data[5], parser->data[4]);
-  return value;
+static void get_sample(sds011_parser_t const *parser, sds011_msg_t *msg) {
+  msg->dev_id            = VALUE16(parser->data[4], parser->data[5]);
+  msg->op                = SDS011_MSG_OP_GET;
+  msg->data.sample.pm2_5 = VALUE16(parser->data[1], parser->data[0]);
+  msg->data.sample.pm10  = VALUE16(parser->data[3], parser->data[2]);
 }
 
 void sds011_parser_clear(sds011_parser_t *parser) {

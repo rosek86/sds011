@@ -108,19 +108,21 @@ void test_parser_end_frame(void **state) {
 void test_parser_msg_data_value(void **state) {
   (void) state; /* unused */
 
-  uint8_t msg[] = { 0xAA, 0xC0, 0xD4, 0x04, 0x3A, 0x0A, 0xA1, 0x60, 0x1D, 0xAB };
+  uint8_t buf[] = { 0xAA, 0xC0, 0xD4, 0x04, 0x3A, 0x0A, 0xA1, 0x60, 0x1D, 0xAB };
 
   sds011_parser_clear(&parser);
   for (int i = 0; i < 9; i++) {
-    assert_int_equal(sds011_parser_parse(&parser, msg[i]), SDS011_PARSER_RES_RUNNING);
+    assert_int_equal(sds011_parser_parse(&parser, buf[i]), SDS011_PARSER_RES_RUNNING);
   }
-  assert_int_equal(sds011_parser_parse(&parser, msg[9]), SDS011_PARSER_RES_READY);
-  assert_int_equal(sds011_parser_get_msg_type(&parser), SDS011_MSG_TYPE_DATA_VALUE);
+  assert_int_equal(sds011_parser_parse(&parser, buf[9]), SDS011_PARSER_RES_READY);
 
-  sds011_msg_data_value_t data = sds011_parser_get_data_value(&parser);
-  assert_int_equal(data.device_id,  0x60A1);
-  assert_int_equal(data.pm2_5,      0x04D4);
-  assert_int_equal(data.pm10,       0x0A3A);
+  sds011_msg_t msg;
+  assert_true(sds011_parser_get_msg(&parser, &msg));
+
+  assert_int_equal(msg.type,                SDS011_MSG_TYPE_SAMPLE);
+  assert_int_equal(msg.dev_id,              0xA160);
+  assert_int_equal(msg.data.sample.pm2_5,   1236);
+  assert_int_equal(msg.data.sample.pm10,    2618);
 }
 
 int main(void) {
