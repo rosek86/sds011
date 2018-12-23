@@ -104,12 +104,32 @@ void test_parser_end_frame(void **state) {
   assert_int_equal(sds011_parser_parse(&parser, msg[9]), SDS011_PARSER_RES_READY);
 }
 
+
+void test_parser_msg_data_value(void **state) {
+  (void) state; /* unused */
+
+  uint8_t msg[] = { 0xAA, 0xC0, 0xD4, 0x04, 0x3A, 0x0A, 0xA1, 0x60, 0x1D, 0xAB };
+
+  sds011_parser_clear(&parser);
+  for (int i = 0; i < 9; i++) {
+    assert_int_equal(sds011_parser_parse(&parser, msg[i]), SDS011_PARSER_RES_RUNNING);
+  }
+  assert_int_equal(sds011_parser_parse(&parser, msg[9]), SDS011_PARSER_RES_READY);
+  assert_int_equal(sds011_parser_get_msg_type(&parser), SDS011_MSG_TYPE_DATA_VALUE);
+
+  sds011_msg_data_value_t data = sds011_parser_get_data_value(&parser);
+  assert_int_equal(data.device_id,  0x60A1);
+  assert_int_equal(data.pm2_5,      0x04D4);
+  assert_int_equal(data.pm10,       0x0A3A);
+}
+
 int main(void) {
   const struct CMUnitTest tests[] = {
     cmocka_unit_test(test_parser_sync_byte),
     cmocka_unit_test(test_parser_payload_len),
     cmocka_unit_test(test_parser_crc),
     cmocka_unit_test(test_parser_end_frame),
+    cmocka_unit_test(test_parser_msg_data_value)
   };
   return cmocka_run_group_tests(tests, NULL, NULL);
 }

@@ -33,8 +33,29 @@ typedef enum {
   SDS011_PARSER_ERR_FRAME_END,
 } sds011_parser_err_t;
 
+typedef enum {
+  SDS011_MSG_TYPE_DATA_VALUE        = 0,
+  SDS011_MSG_TYPE_DATA_MODE         = 2,
+  SDS011_MSG_TYPE_DATA_QUERY        = 4,
+  SDS011_MSG_TYPE_DEV_ID            = 5,
+  SDS011_MSG_TYPE_SLEEP             = 6,
+  SDS011_MSG_TYPE_FIRMWARE_VERSION  = 7,
+  SDS011_MSG_TYPE_ON_PERIOD         = 8,
+} sds011_msg_type_t;
+
+typedef struct {
+  uint16_t device_id;
+  uint16_t pm2_5;
+  uint16_t pm10;
+} sds011_msg_data_value_t;
+
 sds011_parser_ret_t sds011_parser_parse(sds011_parser_t *parser, uint8_t byte);
+
+sds011_msg_type_t sds011_parser_get_msg_type(sds011_parser_t const *parser);
+sds011_msg_data_value_t sds011_parser_get_data_value(sds011_parser_t const *parser);
+
 void sds011_parser_clear(sds011_parser_t *parser);
+
 sds011_parser_err_t sds011_parser_get_error(sds011_parser_t const *parser);
 
 #ifdef __cplusplus
