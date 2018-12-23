@@ -34,13 +34,13 @@ typedef enum {
 } sds011_parser_err_t;
 
 typedef enum {
-  SDS011_MSG_TYPE_SAMPLE            = 0,
-  SDS011_MSG_TYPE_DATA_MODE         = 2,
-  SDS011_MSG_TYPE_DATA_QUERY        = 4,
+  SDS011_MSG_TYPE_REP_MODE          = 2,
+  SDS011_MSG_TYPE_DATA              = 4,
   SDS011_MSG_TYPE_DEV_ID            = 5,
   SDS011_MSG_TYPE_SLEEP             = 6,
   SDS011_MSG_TYPE_FIRMWARE_VERSION  = 7,
   SDS011_MSG_TYPE_ON_PERIOD         = 8,
+  SDS011_MSG_TYPE_COUNT
 } sds011_msg_type_t;
 
 typedef enum {
@@ -48,9 +48,15 @@ typedef enum {
   SDS011_MSG_OP_SET,
 } sds011_msg_op_t;
 
-typedef struct {
-  uint8_t rep_mode;
-} sds011_msg_rep_mode_t;
+typedef enum {
+  SDS011_MSG_SRC_SENSOR,
+  SDS011_MSG_SRC_HOST,
+} sds011_msg_src_t;
+
+typedef enum {
+  SDS011_MSG_REP_ACTIVE,
+  SDS011_MSG_REP_QUERY,
+} sds011_msg_rep_t;
 
 typedef struct {
   uint16_t pm2_5;
@@ -76,12 +82,13 @@ typedef struct {
 } sds011_msg_fw_ver_t;
 
 typedef struct {
-  uint16_t dev_id;
+  uint16_t          dev_id;
   sds011_msg_type_t type;
-  sds011_msg_op_t op;
+  sds011_msg_op_t   op;
+  sds011_msg_src_t  src;
 
   union {
-    sds011_msg_rep_mode_t rep_mode;
+    uint8_t               rep_mode;
     sds011_msg_sample_t   sample;
     sds011_msg_dev_id_t   dev_id;
     sds011_msg_sleep_t    sleep;

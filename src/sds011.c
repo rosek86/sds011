@@ -86,35 +86,92 @@ static uint8_t payload_len_by_cmd(uint8_t cmd) {
 }
 
 static sds011_msg_type_t get_msg_type(sds011_parser_t const *parser);
-static void get_sample(sds011_parser_t const *parser, sds011_msg_t *msg);
+
+// parsers
+static bool parse_rep_mode(sds011_parser_t const *parser, sds011_msg_t *msg);
+static bool parse_data(sds011_parser_t const *parser, sds011_msg_t *msg);
+
+static bool (*_msg_parsers[9])(sds011_parser_t const *parser, sds011_msg_t *msg) = {
+  NULL,           // reserved
+  NULL,           // reserved
+  parse_rep_mode, // SDS011_MSG_TYPE_DATA_MODE
+  NULL,           // reserved
+  parse_data,     // SDS011_MSG_TYPE_DATA
+  NULL,           // SDS011_MSG_TYPE_DEV_ID
+  NULL,           // SDS011_MSG_TYPE_SLEEP
+  NULL,           // SDS011_MSG_TYPE_FIRMWARE_VERSION
+  NULL,           // SDS011_MSG_TYPE_ON_PERIOD
+};
 
 bool sds011_parser_get_msg(sds011_parser_t const *parser, sds011_msg_t *msg) {
-  memset(msg, 0, sizeof(sds011_msg_t));
+  sds011_msg_type_t type = get_msg_type(parser);
 
-  msg->type = get_msg_type(parser);
-
-  if (msg->type == SDS011_MSG_TYPE_SAMPLE) {
-    get_sample(parser, msg);
-    return true;
+  if (type >= SDS011_MSG_TYPE_COUNT) {
+    return false;
+  }
+  if (_msg_parsers[type] == NULL) {
+    return false;
   }
 
-  return false;
+  memset(msg, 0, sizeof(sds011_msg_t));
+  return _msg_parsers[type](parser, msg);
 }
 
 static sds011_msg_type_t get_msg_type(sds011_parser_t const *parser) {
   if (parser->cmd == SDS011_DAT_REPLY) {
-    return SDS011_MSG_TYPE_SAMPLE;
+    return SDS011_MSG_TYPE_DATA;
   }
 
   return parser->data[0];
 }
 
+static bool parse_rep_mode(sds011_parser_t const *parser, sds011_msg_t *msg) {
+  uint8_t op = parser->data[1];
+  uint8_t rm = parser->data[2];
 
-static void get_sample(sds011_parser_t const *parser, sds011_msg_t *msg) {
-  msg->dev_id            = VALUE16(parser->data[4], parser->data[5]);
-  msg->op                = SDS011_MSG_OP_GET;
-  msg->data.sample.pm2_5 = VALUE16(parser->data[1], parser->data[0]);
-  msg->data.sample.pm10  = VALUE16(parser->data[3], parser->data[2]);
+  if (op != SDS011_MSG_OP_GET && op != SDS011_MSG_OP_SET) {
+    return false;
+  }
+  if (rm != SDS011_MSG_REP_ACTIVE && rm != SDS011_MSG_REP_QUERY) {
+    return false;
+  }
+  if (parser->cmd == SDS011_CMD_QUERY) {
+    msg->dev_id         = VALUE16(parser->data[13], parser->data[14]);
+    msg->type           = SDS011_MSG_TYPE_REP_MODE;
+    msg->op             = op;
+    msg->src            = SDS011_MSG_SRC_HOST;
+    msg->data.rep_mode  = rm;
+    return true;
+  }
+  if (parser->cmd == SDS011_CMD_REPLY) {
+    msg->dev_id         = VALUE16(parser->data[4], parser->data[5]);
+    msg->type           = SDS011_MSG_TYPE_REP_MODE;
+    msg->op             = op;
+    msg->src            = SDS011_MSG_SRC_SENSOR;
+    msg->data.rep_mode  = rm;
+    return true;
+  }
+  return false;
+}
+
+static bool parse_data(sds011_parser_t const *parser, sds011_msg_t *msg) {
+  if (parser->cmd == SDS011_CMD_QUERY) {
+    msg->dev_id            = VALUE16(parser->data[13], parser->data[14]);
+    msg->type              = SDS011_MSG_TYPE_DATA;
+    msg->op                = SDS011_MSG_OP_GET;
+    msg->src               = SDS011_MSG_SRC_HOST;
+    return true;
+  }
+  if (parser->cmd == SDS011_DAT_REPLY) {
+    msg->dev_id            = VALUE16(parser->data[4], parser->data[5]);
+    msg->type              = SDS011_MSG_TYPE_DATA;
+    msg->op                = SDS011_MSG_OP_GET;
+    msg->src               = SDS011_MSG_SRC_SENSOR;
+    msg->data.sample.pm2_5 = VALUE16(parser->data[1], parser->data[0]);
+    msg->data.sample.pm10  = VALUE16(parser->data[3], parser->data[2]);
+    return true;
+  }
+  return false;
 }
 
 void sds011_parser_clear(sds011_parser_t *parser) {
