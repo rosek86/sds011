@@ -30,6 +30,7 @@ sds011_parser_ret_t sds011_parser_parse(sds011_parser_t *parser, uint8_t byte) {
       break;
     case STATE_CMD:
       if ((parser->data_len = payload_len_by_cmd(byte)) > 0) {
+        parser->cmd = byte;
         parser->data_iter = 0;
         parser->state++;
       } else {
@@ -85,4 +86,8 @@ void sds011_parser_clear(sds011_parser_t *parser) {
   parser->data_len = 0;
   parser->data_iter = 0;
   parser->data_crc = 0;
+}
+
+sds011_parser_err_t sds011_parser_get_error(sds011_parser_t const *parser) {
+  return parser->error;
 }

@@ -12,6 +12,7 @@ extern "C" {
 
 typedef struct {
   uint8_t state;
+  uint8_t cmd;
   uint8_t data_len;
   uint8_t data_iter;
   uint8_t data_crc;
@@ -34,6 +35,7 @@ typedef enum {
 
 sds011_parser_ret_t sds011_parser_parse(sds011_parser_t *parser, uint8_t byte);
 void sds011_parser_clear(sds011_parser_t *parser);
+sds011_parser_err_t sds011_parser_get_error(sds011_parser_t const *parser);
 
 #ifdef __cplusplus
 }

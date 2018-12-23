@@ -15,7 +15,7 @@ static void test_parser_sync_byte(void **state) {
   // invalid
   assert_int_equal(sds011_parser_parse(&parser, 0x00), SDS011_PARSER_RES_ERROR);
   assert_int_equal(parser.state, 0);
-  assert_int_equal(parser.error, SDS011_PARSER_ERR_FRAME_BEG);
+  assert_int_equal(sds011_parser_get_error(&parser), SDS011_PARSER_ERR_FRAME_BEG);
 
   // okay
   assert_int_equal(sds011_parser_parse(&parser, 0xAA), SDS011_PARSER_RES_RUNNING);
@@ -51,13 +51,65 @@ static void test_parser_payload_len(void **state) {
   assert_int_equal(sds011_parser_parse(&parser, 0xAA), SDS011_PARSER_RES_RUNNING);
   assert_int_equal(sds011_parser_parse(&parser, 0x00), SDS011_PARSER_RES_ERROR);
   assert_int_equal(parser.state, 0);
-  assert_int_equal(parser.error, SDS011_PARSER_ERR_CMD);
+  assert_int_equal(sds011_parser_get_error(&parser), SDS011_PARSER_ERR_CMD);
+}
+
+void test_parser_crc(void **state) {
+  (void) state; /* unused */
+
+  uint8_t msg[] = { 0xAA, 0xC0, 0xD4, 0x04, 0x3A, 0x0A, 0xA1, 0x60, 0x1D, 0xAB };
+
+  // Invalid CRC
+  sds011_parser_clear(&parser);
+  assert_int_equal(sds011_parser_parse(&parser, msg[0]), SDS011_PARSER_RES_RUNNING);
+  assert_int_equal(sds011_parser_parse(&parser, msg[1]), SDS011_PARSER_RES_RUNNING);
+
+  for (int i = 0; i < 6; i++) {
+    assert_int_equal(sds011_parser_parse(&parser, msg[2+i]), SDS011_PARSER_RES_RUNNING);
+  }
+
+  assert_int_equal(sds011_parser_parse(&parser, 0x1E), SDS011_PARSER_RES_ERROR);
+  assert_int_equal(sds011_parser_get_error(&parser), SDS011_PARSER_ERR_CRC);
+
+  // okay
+  sds011_parser_clear(&parser);
+  assert_int_equal(sds011_parser_parse(&parser, msg[0]), SDS011_PARSER_RES_RUNNING);
+  assert_int_equal(sds011_parser_parse(&parser, msg[1]), SDS011_PARSER_RES_RUNNING);
+
+  for (int i = 0; i < 6; i++) {
+    assert_int_equal(sds011_parser_parse(&parser, msg[2+i]), SDS011_PARSER_RES_RUNNING);
+  }
+
+  assert_int_equal(sds011_parser_parse(&parser, msg[8]), SDS011_PARSER_RES_RUNNING);
+}
+
+void test_parser_end_frame(void **state) {
+  (void) state; /* unused */
+
+  uint8_t msg[] = { 0xAA, 0xC0, 0xD4, 0x04, 0x3A, 0x0A, 0xA1, 0x60, 0x1D, 0xAB };
+
+  // Invalid end frame
+  sds011_parser_clear(&parser);
+  for (int i = 0; i < 9; i++) {
+    assert_int_equal(sds011_parser_parse(&parser, msg[i]), SDS011_PARSER_RES_RUNNING);
+  }
+  assert_int_equal(sds011_parser_parse(&parser, 0xAC), SDS011_PARSER_RES_ERROR);
+  assert_int_equal(sds011_parser_get_error(&parser), SDS011_PARSER_ERR_FRAME_END);
+
+  // okay
+  sds011_parser_clear(&parser);
+  for (int i = 0; i < 9; i++) {
+    assert_int_equal(sds011_parser_parse(&parser, msg[i]), SDS011_PARSER_RES_RUNNING);
+  }
+  assert_int_equal(sds011_parser_parse(&parser, msg[9]), SDS011_PARSER_RES_READY);
 }
 
 int main(void) {
   const struct CMUnitTest tests[] = {
     cmocka_unit_test(test_parser_sync_byte),
     cmocka_unit_test(test_parser_payload_len),
+    cmocka_unit_test(test_parser_crc),
+    cmocka_unit_test(test_parser_end_frame),
   };
   return cmocka_run_group_tests(tests, NULL, NULL);
 }
