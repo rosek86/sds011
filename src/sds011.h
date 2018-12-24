@@ -119,7 +119,7 @@ typedef struct {
 
 /**
  * Initialize SDS011 parser
- * @param parser SDS011 parser structure
+ * @param[in] parser SDS011 parser structure
  */
 void sds011_parser_init(sds011_parser_t *parser);
 
@@ -133,19 +133,23 @@ void sds011_parser_init(sds011_parser_t *parser);
  *        On error function returns SDS011_PARSER_RES_ERROR, additional
  *        information about the error can be retrieve using sds011_parser_get_error
  *        function.
- * @param parser SDS011 parser structure
- * @param byte data to be parsed
+ * @param[in] parser SDS011 parser structure
+ * @param[in] byte data to be parsed
  * @return parser result
  */
 sds011_parser_res_t sds011_parser_parse(sds011_parser_t *parser, uint8_t byte);
 
 /**
- * 
+ * Get latest message
+ * @param[in]  parser SDS011 parser structure
+ * @param[out] msg latest message
  */
 void sds011_parser_get_msg(sds011_parser_t const *parser, sds011_msg_t *msg);
 
 /**
- * 
+ * Get latest error
+ * @param[in] parser SDS011 parser structure
+ * @return latest error
  */
 sds011_parser_err_t sds011_parser_get_error(sds011_parser_t const *parser);
 
