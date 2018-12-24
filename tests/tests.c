@@ -9,7 +9,6 @@
 static sds011_parser_t parser;
 
 static void parse_buffer(uint8_t *buf, size_t size, sds011_msg_t *msg) {
-  sds011_parser_clear(&parser);
   for (int i = 0; i < size - 1; i++) {
     sds011_parser_res_t res = sds011_parser_parse(&parser, buf[i]);
     if (res == SDS011_PARSER_RES_ERROR) {
@@ -24,7 +23,7 @@ static void parse_buffer(uint8_t *buf, size_t size, sds011_msg_t *msg) {
 /* A test case that does nothing and succeeds. */
 static void test_parser_sync_byte(void **state) {
   (void) state; /* unused */
-  sds011_parser_clear(&parser);
+  sds011_parser_init(&parser);
 
   // invalid
   assert_int_equal(sds011_parser_parse(&parser, 0x00), SDS011_PARSER_RES_ERROR);
@@ -40,28 +39,28 @@ static void test_parser_payload_len(void **state) {
   (void) state; /* unused */
 
   // SDS011_CMD_QUERY
-  sds011_parser_clear(&parser);
+  sds011_parser_init(&parser);
   assert_int_equal(sds011_parser_parse(&parser, 0xAA), SDS011_PARSER_RES_RUNNING);
   assert_int_equal(sds011_parser_parse(&parser, 0xB4), SDS011_PARSER_RES_RUNNING);
   assert_int_equal(parser.state, 2);
   assert_int_equal(parser.data_len, 15);
 
   // SDS011_CMD_REPLY
-  sds011_parser_clear(&parser);
+  sds011_parser_init(&parser);
   assert_int_equal(sds011_parser_parse(&parser, 0xAA), SDS011_PARSER_RES_RUNNING);
   assert_int_equal(sds011_parser_parse(&parser, 0xC5), SDS011_PARSER_RES_RUNNING);
   assert_int_equal(parser.state, 2);
   assert_int_equal(parser.data_len, 6);
 
   // SDS011_DAT_REPLY
-  sds011_parser_clear(&parser);
+  sds011_parser_init(&parser);
   assert_int_equal(sds011_parser_parse(&parser, 0xAA), SDS011_PARSER_RES_RUNNING);
   assert_int_equal(sds011_parser_parse(&parser, 0xC0), SDS011_PARSER_RES_RUNNING);
   assert_int_equal(parser.state, 2);
   assert_int_equal(parser.data_len, 6);
 
   // Invalid command
-  sds011_parser_clear(&parser);
+  sds011_parser_init(&parser);
   assert_int_equal(sds011_parser_parse(&parser, 0xAA), SDS011_PARSER_RES_RUNNING);
   assert_int_equal(sds011_parser_parse(&parser, 0x00), SDS011_PARSER_RES_ERROR);
   assert_int_equal(parser.state, 0);
@@ -70,11 +69,11 @@ static void test_parser_payload_len(void **state) {
 
 void test_parser_crc(void **state) {
   (void) state; /* unused */
+  sds011_parser_init(&parser);
 
   uint8_t msg[] = { 0xAA, 0xC0, 0xD4, 0x04, 0x3A, 0x0A, 0xA1, 0x60, 0x1D, 0xAB };
 
   // Invalid CRC
-  sds011_parser_clear(&parser);
   assert_int_equal(sds011_parser_parse(&parser, msg[0]), SDS011_PARSER_RES_RUNNING);
   assert_int_equal(sds011_parser_parse(&parser, msg[1]), SDS011_PARSER_RES_RUNNING);
 
@@ -86,7 +85,6 @@ void test_parser_crc(void **state) {
   assert_int_equal(sds011_parser_get_error(&parser), SDS011_PARSER_ERR_CRC);
 
   // okay
-  sds011_parser_clear(&parser);
   assert_int_equal(sds011_parser_parse(&parser, msg[0]), SDS011_PARSER_RES_RUNNING);
   assert_int_equal(sds011_parser_parse(&parser, msg[1]), SDS011_PARSER_RES_RUNNING);
 
@@ -99,11 +97,11 @@ void test_parser_crc(void **state) {
 
 void test_parser_end_frame(void **state) {
   (void) state; /* unused */
+  sds011_parser_init(&parser);
 
   uint8_t msg[] = { 0xAA, 0xC0, 0xD4, 0x04, 0x3A, 0x0A, 0xA1, 0x60, 0x1D, 0xAB };
 
   // Invalid end frame
-  sds011_parser_clear(&parser);
   for (int i = 0; i < 9; i++) {
     assert_int_equal(sds011_parser_parse(&parser, msg[i]), SDS011_PARSER_RES_RUNNING);
   }
@@ -111,7 +109,6 @@ void test_parser_end_frame(void **state) {
   assert_int_equal(sds011_parser_get_error(&parser), SDS011_PARSER_ERR_FRAME_END);
 
   // okay
-  sds011_parser_clear(&parser);
   for (int i = 0; i < 9; i++) {
     assert_int_equal(sds011_parser_parse(&parser, msg[i]), SDS011_PARSER_RES_RUNNING);
   }
@@ -120,6 +117,7 @@ void test_parser_end_frame(void **state) {
 
 void test_parser_msg_rep_mode_get(void **state) {
   (void) state; /* unused */
+  sds011_parser_init(&parser);
 
   sds011_msg_t msg;
 
@@ -160,6 +158,7 @@ void test_parser_msg_rep_mode_get(void **state) {
 
 void test_parser_msg_rep_mode_set(void **state) {
   (void) state; /* unused */
+  sds011_parser_init(&parser);
 
   sds011_msg_t msg;
 
@@ -189,6 +188,7 @@ void test_parser_msg_rep_mode_set(void **state) {
 
 void test_parser_msg_sample(void **state) {
   (void) state; /* unused */
+  sds011_parser_init(&parser);
 
   sds011_msg_t msg;
 
@@ -221,6 +221,7 @@ void test_parser_msg_sample(void **state) {
 
 void test_parser_msg_dev_id_set(void **state) {
   (void) state; /* unused */
+  sds011_parser_init(&parser);
 
   sds011_msg_t msg;
 
@@ -252,6 +253,7 @@ void test_parser_msg_dev_id_set(void **state) {
 
 void test_parser_msg_sleep_set_on(void **state) {
   (void) state; /* unused */
+  sds011_parser_init(&parser);
 
   sds011_msg_t msg;
 
@@ -283,6 +285,7 @@ void test_parser_msg_sleep_set_on(void **state) {
 
 void test_parser_msg_sleep_set_off(void **state) {
   (void) state; /* unused */
+  sds011_parser_init(&parser);
 
   sds011_msg_t msg;
 
@@ -314,6 +317,7 @@ void test_parser_msg_sleep_set_off(void **state) {
 
 void test_parser_msg_sleep_get(void **state) {
   (void) state; /* unused */
+  sds011_parser_init(&parser);
 
   sds011_msg_t msg;
 
@@ -351,6 +355,7 @@ void test_parser_msg_sleep_get(void **state) {
 
 void test_parser_msg_fw_ver_get(void **state) {
   (void) state; /* unused */
+  sds011_parser_init(&parser);
 
   sds011_msg_t msg;
 
@@ -383,6 +388,7 @@ void test_parser_msg_fw_ver_get(void **state) {
 
 void test_parser_msg_op_mode_set_periodic(void **state) {
   (void) state; /* unused */
+  sds011_parser_init(&parser);
 
   sds011_msg_t msg;
 
@@ -416,6 +422,7 @@ void test_parser_msg_op_mode_set_periodic(void **state) {
 
 void test_parser_msg_op_mode_set_continous(void **state) {
   (void) state; /* unused */
+  sds011_parser_init(&parser);
 
   sds011_msg_t msg;
 
@@ -449,7 +456,7 @@ void test_parser_msg_op_mode_set_continous(void **state) {
 
 void test_parser_msg_op_mode_get(void **state) {
   (void) state; /* unused */
-
+  sds011_parser_init(&parser);
 
   sds011_msg_t msg;
 

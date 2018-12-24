@@ -10,16 +10,6 @@ extern "C" {
 
 #define SDS011_MAX_DATA_SIZE 15
 
-typedef struct {
-  uint8_t state;
-  uint8_t cmd;
-  uint8_t data_len;
-  uint8_t data_iter;
-  uint8_t data_crc;
-  uint8_t data[SDS011_MAX_DATA_SIZE];
-  uint32_t error;
-} sds011_parser_t;
-
 typedef enum {
   SDS011_PARSER_RES_RUNNING,
   SDS011_PARSER_RES_READY,
@@ -27,10 +17,14 @@ typedef enum {
 } sds011_parser_res_t;
 
 typedef enum {
+  SDS011_PARSER_OK,
   SDS011_PARSER_ERR_FRAME_BEG,
   SDS011_PARSER_ERR_CMD,
   SDS011_PARSER_ERR_CRC,
   SDS011_PARSER_ERR_FRAME_END,
+  SDS011_PARSER_ERR_INVALID_MSG_TYPE,
+  SDS011_PARSER_ERR_INVALID_DATA,
+  SDS011_PARSER_ERR_INVALID_CMD
 } sds011_parser_err_t;
 
 typedef enum {
@@ -112,10 +106,22 @@ typedef struct {
   } data;
 } sds011_msg_t;
 
-sds011_parser_res_t sds011_parser_parse(sds011_parser_t *parser, uint8_t byte);
-bool sds011_parser_get_msg(sds011_parser_t const *parser, sds011_msg_t *msg);
+typedef struct {
+  uint8_t state;
+  uint8_t cmd;
+  uint8_t data_len;
+  uint8_t data_iter;
+  uint8_t data_crc;
+  uint8_t data[SDS011_MAX_DATA_SIZE];
+  uint32_t error;
+  sds011_msg_t msg;
+} sds011_parser_t;
 
-void sds011_parser_clear(sds011_parser_t *parser);
+void sds011_parser_init(sds011_parser_t *parser);
+
+sds011_parser_res_t sds011_parser_parse(sds011_parser_t *parser, uint8_t byte);
+
+bool sds011_parser_get_msg(sds011_parser_t const *parser, sds011_msg_t *msg);
 
 sds011_parser_err_t sds011_parser_get_error(sds011_parser_t const *parser);
 
