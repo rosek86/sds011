@@ -221,10 +221,10 @@ static bool parse_sleep(sds011_parser_t const *parser, sds011_msg_t *msg) {
     return true;
   }
   if (parser->cmd == SDS011_CMD_REPLY) {
-    msg->dev_id               = VALUE16(parser->data[4], parser->data[5]);
-    msg->type                 = SDS011_MSG_TYPE_SLEEP;
-    msg->op                   = op;
-    msg->src                  = SDS011_MSG_SRC_SENSOR;
+    msg->dev_id           = VALUE16(parser->data[4], parser->data[5]);
+    msg->type             = SDS011_MSG_TYPE_SLEEP;
+    msg->op               = op;
+    msg->src              = SDS011_MSG_SRC_SENSOR;
     msg->data.sleep.value = sl;
     return true;
   }
@@ -232,11 +232,62 @@ static bool parse_sleep(sds011_parser_t const *parser, sds011_msg_t *msg) {
 }
 
 static bool parse_fw_ver(sds011_parser_t const *parser, sds011_msg_t *msg) {
-  return true;
+  if (parser->cmd == SDS011_CMD_QUERY) {
+    msg->dev_id             = VALUE16(parser->data[13], parser->data[14]);
+    msg->type               = SDS011_MSG_TYPE_FW_VER;
+    msg->op                 = SDS011_MSG_OP_GET;
+    msg->src                = SDS011_MSG_SRC_HOST;
+    return true;
+  }
+  if (parser->cmd == SDS011_CMD_REPLY) {
+    msg->dev_id             = VALUE16(parser->data[4], parser->data[5]);
+    msg->type               = SDS011_MSG_TYPE_FW_VER;
+    msg->op                 = SDS011_MSG_OP_GET;
+    msg->src                = SDS011_MSG_SRC_SENSOR;
+    msg->data.fw_ver.year   = parser->data[1];
+    msg->data.fw_ver.month  = parser->data[2];
+    msg->data.fw_ver.day    = parser->data[3];
+    return true;
+  }
+  return false;
 }
 
 static bool parse_op_mode(sds011_parser_t const *parser, sds011_msg_t *msg) {
-  return true;
+  const uint8_t max_interval = 30;
+
+  uint8_t op = parser->data[1];
+  uint8_t interval = parser->data[2];
+  uint8_t mode = SDS011_OP_MODE_CONTINOUS;
+
+  if (op != SDS011_MSG_OP_GET && op != SDS011_MSG_OP_SET) {
+    return false;
+  }
+  if (interval > max_interval) {
+    return false;
+  }
+  if (interval != 0) {
+    mode = SDS011_OP_MODE_INTERVAL;
+  }
+
+  if (parser->cmd == SDS011_CMD_QUERY) {
+    msg->dev_id                 = VALUE16(parser->data[13], parser->data[14]);
+    msg->type                   = SDS011_MSG_TYPE_OP_MODE;
+    msg->op                     = op;
+    msg->src                    = SDS011_MSG_SRC_HOST;
+    msg->data.op_mode.mode      = mode;
+    msg->data.op_mode.interval  = interval;
+    return true;
+  }
+  if (parser->cmd == SDS011_CMD_REPLY) {
+    msg->dev_id                 = VALUE16(parser->data[4], parser->data[5]);
+    msg->type                   = SDS011_MSG_TYPE_OP_MODE;
+    msg->op                     = op;
+    msg->src                    = SDS011_MSG_SRC_SENSOR;
+    msg->data.op_mode.mode      = mode;
+    msg->data.op_mode.interval  = interval;
+    return true;
+  }
+  return false;
 }
 
 void sds011_parser_clear(sds011_parser_t *parser) {

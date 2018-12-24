@@ -34,12 +34,12 @@ typedef enum {
 } sds011_parser_err_t;
 
 typedef enum {
-  SDS011_MSG_TYPE_REP_MODE          = 2,
-  SDS011_MSG_TYPE_DATA              = 4,
-  SDS011_MSG_TYPE_DEV_ID            = 5,
-  SDS011_MSG_TYPE_SLEEP             = 6,
-  SDS011_MSG_TYPE_FIRMWARE_VERSION  = 7,
-  SDS011_MSG_TYPE_ON_PERIOD         = 8,
+  SDS011_MSG_TYPE_REP_MODE  = 2,
+  SDS011_MSG_TYPE_DATA      = 4,
+  SDS011_MSG_TYPE_DEV_ID    = 5,
+  SDS011_MSG_TYPE_SLEEP     = 6,
+  SDS011_MSG_TYPE_FW_VER    = 7,
+  SDS011_MSG_TYPE_OP_MODE   = 8,
   SDS011_MSG_TYPE_COUNT
 } sds011_msg_type_t;
 
@@ -63,6 +63,11 @@ typedef enum {
   SDS011_SLEEP_OFF,
 } sds011_sleep_t;
 
+typedef enum {
+  SDS011_OP_MODE_CONTINOUS,
+  SDS011_OP_MODE_INTERVAL
+} sds011_op_mode_t;
+
 typedef struct {
   uint8_t value;
 } sds011_msg_rep_mode_t;
@@ -81,7 +86,8 @@ typedef struct {
 } sds011_msg_sleep_t;
 
 typedef struct {
-  uint8_t value;
+  uint8_t mode;
+  uint8_t interval;
 } sds011_msg_op_mode_t;
 
 typedef struct {
