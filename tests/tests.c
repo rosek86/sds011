@@ -17,7 +17,7 @@ static void parse_buffer(uint8_t *buf, size_t size, sds011_msg_t *msg) {
     assert_int_equal(res, SDS011_PARSER_RES_RUNNING);
   }
   assert_int_equal(sds011_parser_parse(&parser, buf[size - 1]), SDS011_PARSER_RES_READY);
-  assert_true(sds011_parser_get_msg(&parser, msg));
+  sds011_parser_get_msg(&parser, msg);
 }
 
 /* A test case that does nothing and succeeds. */

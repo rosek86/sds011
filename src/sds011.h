@@ -117,12 +117,36 @@ typedef struct {
   sds011_msg_t msg;
 } sds011_parser_t;
 
+/**
+ * Initialize SDS011 parser
+ * @param parser SDS011 parser structure
+ */
 void sds011_parser_init(sds011_parser_t *parser);
 
+/**
+ * @brief Parse single byte coming from SDS011 device.
+ *        This function returns SDS011_PARSER_RES_RUNNING until entire packet
+ *        is parsed.
+ *        Once packet parsing is completed function returns
+ *        SDS011_PARSER_RES_READY and sds011_parser_get_msg can be used to
+ *        retrieve data message.
+ *        On error function returns SDS011_PARSER_RES_ERROR, additional
+ *        information about the error can be retrieve using sds011_parser_get_error
+ *        function.
+ * @param parser SDS011 parser structure
+ * @param byte data to be parsed
+ * @return parser result
+ */
 sds011_parser_res_t sds011_parser_parse(sds011_parser_t *parser, uint8_t byte);
 
-bool sds011_parser_get_msg(sds011_parser_t const *parser, sds011_msg_t *msg);
+/**
+ * 
+ */
+void sds011_parser_get_msg(sds011_parser_t const *parser, sds011_msg_t *msg);
 
+/**
+ * 
+ */
 sds011_parser_err_t sds011_parser_get_error(sds011_parser_t const *parser);
 
 #ifdef __cplusplus

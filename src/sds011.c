@@ -316,9 +316,8 @@ static sds011_parser_err_t parse_op_mode(sds011_parser_t const *parser, sds011_m
   return SDS011_PARSER_ERR_INVALID_CMD;
 }
 
-bool sds011_parser_get_msg(sds011_parser_t const *parser, sds011_msg_t *msg) {
+void sds011_parser_get_msg(sds011_parser_t const *parser, sds011_msg_t *msg) {
   memcpy(msg, &parser->msg, sizeof(sds011_msg_t));
-  return true;
 }
 
 sds011_parser_err_t sds011_parser_get_error(sds011_parser_t const *parser) {
