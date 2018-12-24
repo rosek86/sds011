@@ -24,7 +24,7 @@ typedef enum {
   SDS011_PARSER_RES_RUNNING,
   SDS011_PARSER_RES_READY,
   SDS011_PARSER_RES_ERROR,
-} sds011_parser_ret_t;
+} sds011_parser_res_t;
 
 typedef enum {
   SDS011_PARSER_ERR_FRAME_BEG,
@@ -54,9 +54,18 @@ typedef enum {
 } sds011_msg_src_t;
 
 typedef enum {
-  SDS011_MSG_REP_ACTIVE,
-  SDS011_MSG_REP_QUERY,
-} sds011_msg_rep_t;
+  SDS011_REP_MODE_ACTIVE,
+  SDS011_REP_MODE_QUERY,
+} sds011_rep_mode_t;
+
+typedef enum {
+  SDS011_SLEEP_ON,
+  SDS011_SLEEP_OFF,
+} sds011_sleep_t;
+
+typedef struct {
+  uint8_t value;
+} sds011_msg_rep_mode_t;
 
 typedef struct {
   uint16_t pm2_5;
@@ -64,15 +73,15 @@ typedef struct {
 } sds011_msg_sample_t;
 
 typedef struct {
-  uint16_t dev_id;
+  uint16_t new_id;
 } sds011_msg_dev_id_t;
 
 typedef struct {
-  uint8_t sleep;
+  uint8_t value;
 } sds011_msg_sleep_t;
 
 typedef struct {
-  uint8_t op_mode;
+  uint8_t value;
 } sds011_msg_op_mode_t;
 
 typedef struct {
@@ -88,16 +97,16 @@ typedef struct {
   sds011_msg_src_t  src;
 
   union {
-    uint8_t               rep_mode;
+    sds011_msg_rep_mode_t rep_mode;
     sds011_msg_sample_t   sample;
     sds011_msg_dev_id_t   dev_id;
     sds011_msg_sleep_t    sleep;
-    sds011_msg_op_mode_t  op_mode;
     sds011_msg_fw_ver_t   fw_ver;
+    sds011_msg_op_mode_t  op_mode;
   } data;
 } sds011_msg_t;
 
-sds011_parser_ret_t sds011_parser_parse(sds011_parser_t *parser, uint8_t byte);
+sds011_parser_res_t sds011_parser_parse(sds011_parser_t *parser, uint8_t byte);
 bool sds011_parser_get_msg(sds011_parser_t const *parser, sds011_msg_t *msg);
 
 void sds011_parser_clear(sds011_parser_t *parser);

@@ -2,17 +2,23 @@
 #include <stddef.h>
 #include <setjmp.h>
 #include <cmocka.h>
+#include <stdio.h>
 
 #include "../src/sds011.h"
 
 static sds011_parser_t parser;
 
-static void parse_buffer(uint8_t *buf, size_t size) {
+static void parse_buffer(uint8_t *buf, size_t size, sds011_msg_t *msg) {
   sds011_parser_clear(&parser);
   for (int i = 0; i < size - 1; i++) {
-    assert_int_equal(sds011_parser_parse(&parser, buf[i]), SDS011_PARSER_RES_RUNNING);
+    sds011_parser_res_t res = sds011_parser_parse(&parser, buf[i]);
+    if (res == SDS011_PARSER_RES_ERROR) {
+      printf("%d\n", sds011_parser_get_error(&parser));
+    }
+    assert_int_equal(res, SDS011_PARSER_RES_RUNNING);
   }
   assert_int_equal(sds011_parser_parse(&parser, buf[size - 1]), SDS011_PARSER_RES_READY);
+  assert_true(sds011_parser_get_msg(&parser, msg));
 }
 
 /* A test case that does nothing and succeeds. */
@@ -112,6 +118,75 @@ void test_parser_end_frame(void **state) {
   assert_int_equal(sds011_parser_parse(&parser, msg[9]), SDS011_PARSER_RES_READY);
 }
 
+void test_parser_msg_rep_mode_get(void **state) {
+  (void) state; /* unused */
+
+  sds011_msg_t msg;
+
+  uint8_t req[] = {
+    0xAA, 0xB4, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF,
+    0xFF, 0x00, 0xAB
+  };
+  parse_buffer(req, sizeof(req), &msg);
+
+  assert_int_equal(msg.dev_id,  0xFFFF);
+  assert_int_equal(msg.type,    SDS011_MSG_TYPE_REP_MODE);
+  assert_int_equal(msg.op,      SDS011_MSG_OP_GET);
+  assert_int_equal(msg.src,     SDS011_MSG_SRC_HOST);
+
+  uint8_t res1[] = {
+    0xAA, 0xC5, 0x02, 0x00, 0x00, 0x00, 0xA1, 0x60, 0x03, 0xAB
+  };
+  parse_buffer(res1, sizeof(res1), &msg);
+
+  assert_int_equal(msg.dev_id,              0xA160);
+  assert_int_equal(msg.type,                SDS011_MSG_TYPE_REP_MODE);
+  assert_int_equal(msg.op,                  SDS011_MSG_OP_GET);
+  assert_int_equal(msg.src,                 SDS011_MSG_SRC_SENSOR);
+  assert_int_equal(msg.data.rep_mode.value, SDS011_REP_MODE_ACTIVE);
+
+  uint8_t res2[] = {
+    0xAA, 0xC5, 0x02, 0x00, 0x01, 0x00, 0xA1, 0x60, 0x04, 0xAB
+  };
+  parse_buffer(res2, sizeof(res2), &msg);
+
+  assert_int_equal(msg.dev_id,              0xA160);
+  assert_int_equal(msg.type,                SDS011_MSG_TYPE_REP_MODE);
+  assert_int_equal(msg.op,                  SDS011_MSG_OP_GET);
+  assert_int_equal(msg.src,                 SDS011_MSG_SRC_SENSOR);
+  assert_int_equal(msg.data.rep_mode.value, SDS011_REP_MODE_QUERY);
+}
+
+void test_parser_msg_rep_mode_set(void **state) {
+  (void) state; /* unused */
+
+  sds011_msg_t msg;
+
+  uint8_t req[] = {
+    0xAA, 0xB4, 0x02, 0x01, 0x01, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xA1,
+    0x60, 0x05, 0xAB
+  };
+  parse_buffer(req, sizeof(req), &msg);
+
+  assert_int_equal(msg.dev_id,  0xA160);
+  assert_int_equal(msg.type,    SDS011_MSG_TYPE_REP_MODE);
+  assert_int_equal(msg.op,      SDS011_MSG_OP_SET);
+  assert_int_equal(msg.src,     SDS011_MSG_SRC_HOST);
+
+  uint8_t res[] = {
+    0xAA, 0xC5, 0x02, 0x01, 0x01, 0x00, 0xA1, 0x60, 0x05, 0xAB
+  };
+  parse_buffer(res, sizeof(res), &msg);
+
+  assert_int_equal(msg.dev_id,              0xA160);
+  assert_int_equal(msg.type,                SDS011_MSG_TYPE_REP_MODE);
+  assert_int_equal(msg.op,                  SDS011_MSG_OP_SET);
+  assert_int_equal(msg.src,                 SDS011_MSG_SRC_SENSOR);
+  assert_int_equal(msg.data.rep_mode.value, SDS011_REP_MODE_QUERY);
+}
+
 void test_parser_msg_sample(void **state) {
   (void) state; /* unused */
 
@@ -123,9 +198,8 @@ void test_parser_msg_sample(void **state) {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF,
     0xFF, 0x02, 0xAB
   };
-  parse_buffer(req, sizeof(req));
+  parse_buffer(req, sizeof(req), &msg);
 
-  assert_true(sds011_parser_get_msg(&parser, &msg));
   assert_int_equal(msg.dev_id,  0xFFFF);
   assert_int_equal(msg.type,    SDS011_MSG_TYPE_DATA);
   assert_int_equal(msg.op,      SDS011_MSG_OP_GET);
@@ -135,9 +209,8 @@ void test_parser_msg_sample(void **state) {
   uint8_t res[] = {
     0xAA, 0xC0, 0xD4, 0x04, 0x3A, 0x0A, 0xA1, 0x60, 0x1D, 0xAB
   };
-  parse_buffer(res, sizeof(res));
+  parse_buffer(res, sizeof(res), &msg);
 
-  assert_true(sds011_parser_get_msg(&parser, &msg));
   assert_int_equal(msg.dev_id,            0xA160);
   assert_int_equal(msg.type,              SDS011_MSG_TYPE_DATA);
   assert_int_equal(msg.op,                SDS011_MSG_OP_GET);
@@ -146,50 +219,134 @@ void test_parser_msg_sample(void **state) {
   assert_int_equal(msg.data.sample.pm10,  2618);
 }
 
-void test_parser_msg_rep_mode_get(void **state) {
+void test_parser_msg_dev_id_set(void **state) {
   (void) state; /* unused */
 
   sds011_msg_t msg;
 
+  // request
   uint8_t req[] = {
-    0xAA, 0xB4, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF,
-    0xFF, 0x00, 0xAB
+    0xAA, 0xB4, 0x05, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0xA0, 0x01, 0xA1,
+    0x60, 0xA7, 0xAB
   };
-  parse_buffer(req, sizeof(req));
+  parse_buffer(req, sizeof(req), &msg);
 
-  assert_true(sds011_parser_get_msg(&parser, &msg));
-  assert_int_equal(msg.dev_id,  0xFFFF);
-  assert_int_equal(msg.type,    SDS011_MSG_TYPE_REP_MODE);
-  assert_int_equal(msg.op,      SDS011_MSG_OP_GET);
-  assert_int_equal(msg.src,     SDS011_MSG_SRC_HOST);
+  assert_int_equal(msg.dev_id,              0xA160);
+  assert_int_equal(msg.type,                SDS011_MSG_TYPE_DEV_ID);
+  assert_int_equal(msg.op,                  SDS011_MSG_OP_SET);
+  assert_int_equal(msg.src,                 SDS011_MSG_SRC_HOST);
+  assert_int_equal(msg.data.dev_id.new_id,  0xA001);
 
-  uint8_t res1[] = {
-    0xAA, 0xC5, 0x02, 0x00, 0x00, 0x00, 0xA1, 0x60, 0x03, 0xAB
+  // response
+  uint8_t res[] = {
+    0xAA, 0xC5, 0x05, 0x00, 0x00, 0x00, 0xA0, 0x01, 0xA6, 0xAB
   };
-  parse_buffer(res1, sizeof(res1));
+  parse_buffer(res, sizeof(res), &msg);
 
-  assert_true(sds011_parser_get_msg(&parser, &msg));
-  assert_int_equal(msg.dev_id,        0xA160);
-  assert_int_equal(msg.type,          SDS011_MSG_TYPE_REP_MODE);
-  assert_int_equal(msg.op,            SDS011_MSG_OP_GET);
-  assert_int_equal(msg.src,           SDS011_MSG_SRC_SENSOR);
-  assert_int_equal(msg.data.rep_mode, SDS011_MSG_REP_ACTIVE);
+  assert_int_equal(msg.dev_id,            0xA001);
+  assert_int_equal(msg.type,              SDS011_MSG_TYPE_DEV_ID);
+  assert_int_equal(msg.op,                SDS011_MSG_OP_SET);
+  assert_int_equal(msg.src,               SDS011_MSG_SRC_SENSOR);
+}
 
-  uint8_t res2[] = {
-    0xAA, 0xC5, 0x02, 0x00, 0x01, 0x00, 0xA1, 0x60, 0x04, 0xAB
+void test_parser_msg_sleep_set_on(void **state) {
+  (void) state; /* unused */
+
+  sds011_msg_t msg;
+
+  // request
+  uint8_t req[] = {
+    0xAA, 0xB4, 0x06, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xA1, 0x60, 0x08, 0xAB
   };
-  parse_buffer(res2, sizeof(res2));
+  parse_buffer(req, sizeof(req), &msg);
 
-  assert_true(sds011_parser_get_msg(&parser, &msg));
-  assert_int_equal(msg.dev_id,        0xA160);
-  assert_int_equal(msg.type,          SDS011_MSG_TYPE_REP_MODE);
-  assert_int_equal(msg.op,            SDS011_MSG_OP_GET);
-  assert_int_equal(msg.src,           SDS011_MSG_SRC_SENSOR);
-  assert_int_equal(msg.data.rep_mode, SDS011_MSG_REP_QUERY);
+  assert_int_equal(msg.dev_id,            0xA160);
+  assert_int_equal(msg.type,              SDS011_MSG_TYPE_SLEEP);
+  assert_int_equal(msg.op,                SDS011_MSG_OP_SET);
+  assert_int_equal(msg.src,               SDS011_MSG_SRC_HOST);
+  assert_int_equal(msg.data.sleep.value,  SDS011_SLEEP_ON);
 
-  // 0xAA 0xB4 0x02 0x01 0x01 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0xA1 0x60 0x05 0xAB
-  // 0xAA 0xC5 0x02 0x01 0x01 0x00 0xA1 0x60 0x05 0xAB
+  // response
+  uint8_t res[] = {
+    0xAA, 0xC5, 0x06, 0x01, 0x00, 0x00, 0xA1, 0x60, 0x08, 0xAB
+  };
+  parse_buffer(res, sizeof(res), &msg);
+ 
+  assert_int_equal(msg.dev_id,            0xA160);
+  assert_int_equal(msg.type,              SDS011_MSG_TYPE_SLEEP);
+  assert_int_equal(msg.op,                SDS011_MSG_OP_SET);
+  assert_int_equal(msg.src,               SDS011_MSG_SRC_SENSOR);
+  assert_int_equal(msg.data.sleep.value,  SDS011_SLEEP_ON);
+}
+
+void test_parser_msg_sleep_set_off(void **state) {
+  (void) state; /* unused */
+
+  sds011_msg_t msg;
+
+  // request
+  uint8_t req[] = {
+    0xAA, 0xB4, 0x06, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xA1, 0x60, 0x09, 0xAB
+  };
+  parse_buffer(req, sizeof(req), &msg);
+
+  assert_int_equal(msg.dev_id,            0xA160);
+  assert_int_equal(msg.type,              SDS011_MSG_TYPE_SLEEP);
+  assert_int_equal(msg.op,                SDS011_MSG_OP_SET);
+  assert_int_equal(msg.src,               SDS011_MSG_SRC_HOST);
+  assert_int_equal(msg.data.sleep.value,  SDS011_SLEEP_OFF);
+
+  // response
+  uint8_t res[] = {
+    0xAA, 0xC5, 0x06, 0x01, 0x01, 0x00, 0xA1, 0x60, 0x09, 0xAB
+  };
+  parse_buffer(res, sizeof(res), &msg);
+ 
+  assert_int_equal(msg.dev_id,            0xA160);
+  assert_int_equal(msg.type,              SDS011_MSG_TYPE_SLEEP);
+  assert_int_equal(msg.op,                SDS011_MSG_OP_SET);
+  assert_int_equal(msg.src,               SDS011_MSG_SRC_SENSOR);
+  assert_int_equal(msg.data.sleep.value,  SDS011_SLEEP_OFF);
+}
+
+void test_parser_msg_sleep_get(void **state) {
+  (void) state; /* unused */
+
+  sds011_msg_t msg;
+
+  // request
+  uint8_t req[] = {
+    0xAA, 0xB4, 0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xA1, 0x60, 0x07, 0xAB
+  };
+  parse_buffer(req, sizeof(req), &msg);
+
+  assert_int_equal(msg.dev_id,            0xA160);
+  assert_int_equal(msg.type,              SDS011_MSG_TYPE_SLEEP);
+  assert_int_equal(msg.op,                SDS011_MSG_OP_GET);
+  assert_int_equal(msg.src,               SDS011_MSG_SRC_HOST);
+
+  // response
+  uint8_t res1[] = { 0xAA, 0xC5, 0x06, 0x00, 0x01, 0x00, 0xA1, 0x60, 0x08, 0xAB };
+  parse_buffer(res1, sizeof(res1), &msg);
+ 
+  assert_int_equal(msg.dev_id,            0xA160);
+  assert_int_equal(msg.type,              SDS011_MSG_TYPE_SLEEP);
+  assert_int_equal(msg.op,                SDS011_MSG_OP_GET);
+  assert_int_equal(msg.src,               SDS011_MSG_SRC_SENSOR);
+  assert_int_equal(msg.data.sleep.value,  SDS011_SLEEP_OFF);
+
+  uint8_t res2[] = { 0xAA, 0xC5, 0x06, 0x00, 0x00, 0x00, 0xA1, 0x60, 0x07, 0xAB };
+  parse_buffer(res2, sizeof(res2), &msg);
+ 
+  assert_int_equal(msg.dev_id,            0xA160);
+  assert_int_equal(msg.type,              SDS011_MSG_TYPE_SLEEP);
+  assert_int_equal(msg.op,                SDS011_MSG_OP_GET);
+  assert_int_equal(msg.src,               SDS011_MSG_SRC_SENSOR);
+  assert_int_equal(msg.data.sleep.value,  SDS011_SLEEP_ON);
 }
 
 int main(void) {
@@ -198,8 +355,13 @@ int main(void) {
     cmocka_unit_test(test_parser_payload_len),
     cmocka_unit_test(test_parser_crc),
     cmocka_unit_test(test_parser_end_frame),
-    cmocka_unit_test(test_parser_msg_sample),
     cmocka_unit_test(test_parser_msg_rep_mode_get),
+    cmocka_unit_test(test_parser_msg_rep_mode_set),
+    cmocka_unit_test(test_parser_msg_sample),
+    cmocka_unit_test(test_parser_msg_dev_id_set),
+    cmocka_unit_test(test_parser_msg_sleep_set_on),
+    cmocka_unit_test(test_parser_msg_sleep_set_off),
+    cmocka_unit_test(test_parser_msg_sleep_get),
   };
   return cmocka_run_group_tests(tests, NULL, NULL);
 }
