@@ -4,7 +4,7 @@ project(parse_sample)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall")
 
 add_executable(parse_sample
-  ../src/sds011.c
+  ../src/sds011_parser.c
   ./parse_sample.c
 )
 

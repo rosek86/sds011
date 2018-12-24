@@ -4,7 +4,7 @@
 #include <cmocka.h>
 #include <stdio.h>
 
-#include "../src/sds011.h"
+#include "../src/sds011_parser.h"
 
 static sds011_parser_t parser;
 

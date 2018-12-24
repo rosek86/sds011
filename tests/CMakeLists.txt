@@ -10,7 +10,8 @@ include_directories(
 )
 
 add_executable(tests
-  ../src/sds011.c
+  ../src/sds011_parser.c
+  ../src/sds011_builder.c
   ./tests.c
 )
 

@@ -1,6 +1,7 @@
 {
   "files.associations": {
     ".screenrc": "bat",
-    "setjmp.h": "c"
+    "setjmp.h": "c",
+    "sds011_parser.h": "c"
   }
 }
