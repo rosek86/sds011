@@ -2,16 +2,6 @@
 
 #include <string.h>
 
-#define SDS011_FRAME_BEG 0xAA
-#define SDS011_FRAME_END 0xAB
-
-#define SDS011_CMD_QUERY 0xB4
-#define SDS011_CMD_REPLY 0xC5
-#define SDS011_DAT_REPLY 0xC0
-
-#define SDS011_QUERY_DATA_SIZE 15
-#define SDS011_REPLY_DATA_SIZE 6
-
 #define VALUE16(hi, lo) (((uint16_t)(hi) << 8) | (lo))
 
 typedef enum {
