@@ -24,7 +24,7 @@ static void parser_clear(sds011_parser_t *parser) {
   parser->data_len  = 0;
   parser->data_iter = 0;
   parser->data_crc  = 0;
-  parser->error     = SDS011_PARSER_OK;
+  parser->error     = SDS011_OK;
 }
 
 static uint8_t parser_data_len_by_cmd(uint8_t cmd);
@@ -35,13 +35,13 @@ sds011_parser_res_t sds011_parser_parse(sds011_parser_t *parser, uint8_t byte) {
   switch (parser->state) {
     case STATE_BEG:
       if (byte != SDS011_FRAME_BEG) {
-        return parser_error(parser, SDS011_PARSER_ERR_FRAME_BEG);
+        return parser_error(parser, SDS011_ERR_PARSER_FRAME_BEG);
       }
       parser->state++;
       break;
     case STATE_CMD:
       if ((parser->data_len = parser_data_len_by_cmd(byte)) == 0) {
-        return parser_error(parser, SDS011_PARSER_ERR_CMD);
+        return parser_error(parser, SDS011_ERR_PARSER_CMD);
       }
       parser->cmd = byte;
       parser->data_iter = 0;
@@ -57,13 +57,13 @@ sds011_parser_res_t sds011_parser_parse(sds011_parser_t *parser, uint8_t byte) {
       break;
     case STATE_CRC:
       if (parser->data_crc != byte) {
-        return parser_error(parser, SDS011_PARSER_ERR_CRC);
+        return parser_error(parser, SDS011_ERR_PARSER_CRC);
       }
       parser->state++;
       break;
     case STATE_END:
       if (byte != SDS011_FRAME_END) {
-        return parser_error(parser, SDS011_PARSER_ERR_FRAME_END);
+        return parser_error(parser, SDS011_ERR_PARSER_FRAME_END);
       }
       return parser_completed(parser);
       break;
@@ -91,13 +91,13 @@ static sds011_parser_res_t parser_error(sds011_parser_t *parser, uint32_t err_co
   return SDS011_PARSER_RES_ERROR;
 }
 
-static sds011_parser_err_t get_msg(sds011_parser_t const *parser, sds011_msg_t *msg);
+static sds011_err_t get_msg(sds011_parser_t const *parser, sds011_msg_t *msg);
 
 static sds011_parser_res_t parser_completed(sds011_parser_t *parser) {
   sds011_parser_res_t result = SDS011_PARSER_RES_READY;
 
-  sds011_parser_err_t err_code;
-  if ((err_code = get_msg(parser, &parser->msg)) != SDS011_PARSER_OK) {
+  sds011_err_t err_code;
+  if ((err_code = get_msg(parser, &parser->msg)) != SDS011_OK) {
     result = SDS011_PARSER_RES_ERROR;
   }
 
@@ -110,14 +110,14 @@ static sds011_parser_res_t parser_completed(sds011_parser_t *parser) {
 static sds011_msg_type_t get_msg_type(sds011_parser_t const *parser);
 
 // parsers
-static sds011_parser_err_t parse_rep_mode(sds011_parser_t const *parser, sds011_msg_t *msg);
-static sds011_parser_err_t parse_data(sds011_parser_t const *parser, sds011_msg_t *msg);
-static sds011_parser_err_t parse_dev_id(sds011_parser_t const *parser, sds011_msg_t *msg);
-static sds011_parser_err_t parse_sleep(sds011_parser_t const *parser, sds011_msg_t *msg);
-static sds011_parser_err_t parse_fw_ver(sds011_parser_t const *parser, sds011_msg_t *msg);
-static sds011_parser_err_t parse_op_mode(sds011_parser_t const *parser, sds011_msg_t *msg);
+static sds011_err_t parse_rep_mode(sds011_parser_t const *parser, sds011_msg_t *msg);
+static sds011_err_t parse_data(sds011_parser_t const *parser, sds011_msg_t *msg);
+static sds011_err_t parse_dev_id(sds011_parser_t const *parser, sds011_msg_t *msg);
+static sds011_err_t parse_sleep(sds011_parser_t const *parser, sds011_msg_t *msg);
+static sds011_err_t parse_fw_ver(sds011_parser_t const *parser, sds011_msg_t *msg);
+static sds011_err_t parse_op_mode(sds011_parser_t const *parser, sds011_msg_t *msg);
 
-static sds011_parser_err_t (*_msg_parsers[9])(sds011_parser_t const *parser, sds011_msg_t *msg) = {
+static sds011_err_t (*_msg_parsers[9])(sds011_parser_t const *parser, sds011_msg_t *msg) = {
   NULL,           // reserved
   NULL,           // reserved
   parse_rep_mode,
@@ -129,14 +129,14 @@ static sds011_parser_err_t (*_msg_parsers[9])(sds011_parser_t const *parser, sds
   parse_op_mode,
 };
 
-static sds011_parser_err_t get_msg(sds011_parser_t const *parser, sds011_msg_t *msg) {
+static sds011_err_t get_msg(sds011_parser_t const *parser, sds011_msg_t *msg) {
   sds011_msg_type_t type = get_msg_type(parser);
 
   if (type >= SDS011_MSG_TYPE_COUNT) {
-    return SDS011_PARSER_ERR_INVALID_MSG_TYPE;
+    return SDS011_ERR_INVALID_MSG_TYPE;
   }
   if (_msg_parsers[type] == NULL) {
-    return SDS011_PARSER_ERR_INVALID_MSG_TYPE;
+    return SDS011_ERR_INVALID_MSG_TYPE;
   }
 
   memset(msg, 0, sizeof(sds011_msg_t));
@@ -150,15 +150,15 @@ static sds011_msg_type_t get_msg_type(sds011_parser_t const *parser) {
   return parser->data[0];
 }
 
-static sds011_parser_err_t parse_rep_mode(sds011_parser_t const *parser, sds011_msg_t *msg) {
+static sds011_err_t parse_rep_mode(sds011_parser_t const *parser, sds011_msg_t *msg) {
   uint8_t op = parser->data[1];
   uint8_t rm = parser->data[2];
 
   if (op != SDS011_MSG_OP_GET && op != SDS011_MSG_OP_SET) {
-    return SDS011_PARSER_ERR_INVALID_DATA;
+    return SDS011_ERR_INVALID_DATA;
   }
   if (rm != SDS011_REP_MODE_ACTIVE && rm != SDS011_REP_MODE_QUERY) {
-    return SDS011_PARSER_ERR_INVALID_DATA;
+    return SDS011_ERR_INVALID_DATA;
   }
   if (parser->cmd == SDS011_CMD_QUERY) {
     msg->dev_id               = VALUE16(parser->data[13], parser->data[14]);
@@ -166,7 +166,7 @@ static sds011_parser_err_t parse_rep_mode(sds011_parser_t const *parser, sds011_
     msg->op                   = op;
     msg->src                  = SDS011_MSG_SRC_HOST;
     msg->data.rep_mode.value  = rm;
-    return SDS011_PARSER_OK;
+    return SDS011_OK;
   }
   if (parser->cmd == SDS011_CMD_REPLY) {
     msg->dev_id               = VALUE16(parser->data[4], parser->data[5]);
@@ -174,18 +174,18 @@ static sds011_parser_err_t parse_rep_mode(sds011_parser_t const *parser, sds011_
     msg->op                   = op;
     msg->src                  = SDS011_MSG_SRC_SENSOR;
     msg->data.rep_mode.value  = rm;
-    return SDS011_PARSER_OK;
+    return SDS011_OK;
   }
-  return SDS011_PARSER_ERR_INVALID_CMD;
+  return SDS011_ERR_INVALID_CMD;
 }
 
-static sds011_parser_err_t parse_data(sds011_parser_t const *parser, sds011_msg_t *msg) {
+static sds011_err_t parse_data(sds011_parser_t const *parser, sds011_msg_t *msg) {
   if (parser->cmd == SDS011_CMD_QUERY) {
     msg->dev_id            = VALUE16(parser->data[13], parser->data[14]);
     msg->type              = SDS011_MSG_TYPE_DATA;
     msg->op                = SDS011_MSG_OP_GET;
     msg->src               = SDS011_MSG_SRC_HOST;
-    return SDS011_PARSER_OK;
+    return SDS011_OK;
   }
   if (parser->cmd == SDS011_DAT_REPLY) {
     msg->dev_id            = VALUE16(parser->data[4], parser->data[5]);
@@ -194,39 +194,39 @@ static sds011_parser_err_t parse_data(sds011_parser_t const *parser, sds011_msg_
     msg->src               = SDS011_MSG_SRC_SENSOR;
     msg->data.sample.pm2_5 = VALUE16(parser->data[1], parser->data[0]);
     msg->data.sample.pm10  = VALUE16(parser->data[3], parser->data[2]);
-    return SDS011_PARSER_OK;
+    return SDS011_OK;
   }
-  return SDS011_PARSER_ERR_INVALID_CMD;
+  return SDS011_ERR_INVALID_CMD;
 }
 
-static sds011_parser_err_t parse_dev_id(sds011_parser_t const *parser, sds011_msg_t *msg) {
+static sds011_err_t parse_dev_id(sds011_parser_t const *parser, sds011_msg_t *msg) {
   if (parser->cmd == SDS011_CMD_QUERY) {
     msg->dev_id             = VALUE16(parser->data[13], parser->data[14]);
     msg->type               = SDS011_MSG_TYPE_DEV_ID;
     msg->op                 = SDS011_MSG_OP_SET;
     msg->src                = SDS011_MSG_SRC_HOST;
     msg->data.dev_id.new_id = VALUE16(parser->data[11], parser->data[12]);
-    return SDS011_PARSER_OK;
+    return SDS011_OK;
   }
   if (parser->cmd == SDS011_CMD_REPLY) {
     msg->dev_id            = VALUE16(parser->data[4], parser->data[5]);
     msg->type              = SDS011_MSG_TYPE_DEV_ID;
     msg->op                = SDS011_MSG_OP_SET;
     msg->src               = SDS011_MSG_SRC_SENSOR;
-    return SDS011_PARSER_OK;
+    return SDS011_OK;
   }
-  return SDS011_PARSER_ERR_INVALID_CMD;
+  return SDS011_ERR_INVALID_CMD;
 }
 
-static sds011_parser_err_t parse_sleep(sds011_parser_t const *parser, sds011_msg_t *msg) {
+static sds011_err_t parse_sleep(sds011_parser_t const *parser, sds011_msg_t *msg) {
   uint8_t op = parser->data[1];
   uint8_t sl = parser->data[2];
 
   if (op != SDS011_MSG_OP_GET && op != SDS011_MSG_OP_SET) {
-    return SDS011_PARSER_ERR_INVALID_DATA;
+    return SDS011_ERR_INVALID_DATA;
   }
   if (sl != SDS011_SLEEP_ON && sl != SDS011_SLEEP_OFF) {
-    return SDS011_PARSER_ERR_INVALID_DATA;
+    return SDS011_ERR_INVALID_DATA;
   }
   if (parser->cmd == SDS011_CMD_QUERY) {
     msg->dev_id           = VALUE16(parser->data[13], parser->data[14]);
@@ -234,7 +234,7 @@ static sds011_parser_err_t parse_sleep(sds011_parser_t const *parser, sds011_msg
     msg->op               = op;
     msg->src              = SDS011_MSG_SRC_HOST;
     msg->data.sleep.value = sl;
-    return SDS011_PARSER_OK;
+    return SDS011_OK;
   }
   if (parser->cmd == SDS011_CMD_REPLY) {
     msg->dev_id           = VALUE16(parser->data[4], parser->data[5]);
@@ -242,18 +242,18 @@ static sds011_parser_err_t parse_sleep(sds011_parser_t const *parser, sds011_msg
     msg->op               = op;
     msg->src              = SDS011_MSG_SRC_SENSOR;
     msg->data.sleep.value = sl;
-    return SDS011_PARSER_OK;
+    return SDS011_OK;
   }
-  return SDS011_PARSER_ERR_INVALID_CMD;
+  return SDS011_ERR_INVALID_CMD;
 }
 
-static sds011_parser_err_t parse_fw_ver(sds011_parser_t const *parser, sds011_msg_t *msg) {
+static sds011_err_t parse_fw_ver(sds011_parser_t const *parser, sds011_msg_t *msg) {
   if (parser->cmd == SDS011_CMD_QUERY) {
     msg->dev_id             = VALUE16(parser->data[13], parser->data[14]);
     msg->type               = SDS011_MSG_TYPE_FW_VER;
     msg->op                 = SDS011_MSG_OP_GET;
     msg->src                = SDS011_MSG_SRC_HOST;
-    return SDS011_PARSER_OK;
+    return SDS011_OK;
   }
   if (parser->cmd == SDS011_CMD_REPLY) {
     msg->dev_id             = VALUE16(parser->data[4], parser->data[5]);
@@ -263,12 +263,12 @@ static sds011_parser_err_t parse_fw_ver(sds011_parser_t const *parser, sds011_ms
     msg->data.fw_ver.year   = parser->data[1];
     msg->data.fw_ver.month  = parser->data[2];
     msg->data.fw_ver.day    = parser->data[3];
-    return SDS011_PARSER_OK;
+    return SDS011_OK;
   }
-  return SDS011_PARSER_ERR_INVALID_CMD;
+  return SDS011_ERR_INVALID_CMD;
 }
 
-static sds011_parser_err_t parse_op_mode(sds011_parser_t const *parser, sds011_msg_t *msg) {
+static sds011_err_t parse_op_mode(sds011_parser_t const *parser, sds011_msg_t *msg) {
   const uint8_t max_interval = 30;
 
   uint8_t op = parser->data[1];
@@ -276,10 +276,10 @@ static sds011_parser_err_t parse_op_mode(sds011_parser_t const *parser, sds011_m
   uint8_t mode = SDS011_OP_MODE_CONTINOUS;
 
   if (op != SDS011_MSG_OP_GET && op != SDS011_MSG_OP_SET) {
-    return SDS011_PARSER_ERR_INVALID_DATA;
+    return SDS011_ERR_INVALID_DATA;
   }
   if (interval > max_interval) {
-    return SDS011_PARSER_ERR_INVALID_DATA;
+    return SDS011_ERR_INVALID_DATA;
   }
   if (interval != 0) {
     mode = SDS011_OP_MODE_INTERVAL;
@@ -292,7 +292,7 @@ static sds011_parser_err_t parse_op_mode(sds011_parser_t const *parser, sds011_m
     msg->src                    = SDS011_MSG_SRC_HOST;
     msg->data.op_mode.mode      = mode;
     msg->data.op_mode.interval  = interval;
-    return SDS011_PARSER_OK;
+    return SDS011_OK;
   }
   if (parser->cmd == SDS011_CMD_REPLY) {
     msg->dev_id                 = VALUE16(parser->data[4], parser->data[5]);
@@ -301,15 +301,15 @@ static sds011_parser_err_t parse_op_mode(sds011_parser_t const *parser, sds011_m
     msg->src                    = SDS011_MSG_SRC_SENSOR;
     msg->data.op_mode.mode      = mode;
     msg->data.op_mode.interval  = interval;
-    return SDS011_PARSER_OK;
+    return SDS011_OK;
   }
-  return SDS011_PARSER_ERR_INVALID_CMD;
+  return SDS011_ERR_INVALID_CMD;
 }
 
 void sds011_parser_get_msg(sds011_parser_t const *parser, sds011_msg_t *msg) {
   memcpy(msg, &parser->msg, sizeof(sds011_msg_t));
 }
 
-sds011_parser_err_t sds011_parser_get_error(sds011_parser_t const *parser) {
+sds011_err_t sds011_parser_get_error(sds011_parser_t const *parser) {
   return parser->error;
 }

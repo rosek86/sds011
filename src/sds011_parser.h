@@ -1,5 +1,5 @@
-#ifndef SDS011_H__
-#define SDS011_H__
+#ifndef SDS011_PARSER_H__
+#define SDS011_PARSER_H__
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -55,10 +55,10 @@ void sds011_parser_get_msg(sds011_parser_t const *parser, sds011_msg_t *msg);
  * @param[in] parser SDS011 parser structure
  * @return latest error
  */
-sds011_parser_err_t sds011_parser_get_error(sds011_parser_t const *parser);
+sds011_err_t sds011_parser_get_error(sds011_parser_t const *parser);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif // SDS011_H__
+#endif // SDS011_PARSER_H__

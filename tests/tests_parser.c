@@ -28,7 +28,7 @@ static void test_parser_sync_byte(void **state) {
   // invalid
   assert_int_equal(sds011_parser_parse(&parser, 0x00), SDS011_PARSER_RES_ERROR);
   assert_int_equal(parser.state, 0);
-  assert_int_equal(sds011_parser_get_error(&parser), SDS011_PARSER_ERR_FRAME_BEG);
+  assert_int_equal(sds011_parser_get_error(&parser), SDS011_ERR_PARSER_FRAME_BEG);
 
   // okay
   assert_int_equal(sds011_parser_parse(&parser, 0xAA), SDS011_PARSER_RES_RUNNING);
@@ -64,7 +64,7 @@ static void test_parser_payload_len(void **state) {
   assert_int_equal(sds011_parser_parse(&parser, 0xAA), SDS011_PARSER_RES_RUNNING);
   assert_int_equal(sds011_parser_parse(&parser, 0x00), SDS011_PARSER_RES_ERROR);
   assert_int_equal(parser.state, 0);
-  assert_int_equal(sds011_parser_get_error(&parser), SDS011_PARSER_ERR_CMD);
+  assert_int_equal(sds011_parser_get_error(&parser), SDS011_ERR_PARSER_CMD);
 }
 
 void test_parser_crc(void **state) {
@@ -82,7 +82,7 @@ void test_parser_crc(void **state) {
   }
 
   assert_int_equal(sds011_parser_parse(&parser, 0x1E), SDS011_PARSER_RES_ERROR);
-  assert_int_equal(sds011_parser_get_error(&parser), SDS011_PARSER_ERR_CRC);
+  assert_int_equal(sds011_parser_get_error(&parser), SDS011_ERR_PARSER_CRC);
 
   // okay
   assert_int_equal(sds011_parser_parse(&parser, msg[0]), SDS011_PARSER_RES_RUNNING);
@@ -106,7 +106,7 @@ void test_parser_end_frame(void **state) {
     assert_int_equal(sds011_parser_parse(&parser, msg[i]), SDS011_PARSER_RES_RUNNING);
   }
   assert_int_equal(sds011_parser_parse(&parser, 0xAC), SDS011_PARSER_RES_ERROR);
-  assert_int_equal(sds011_parser_get_error(&parser), SDS011_PARSER_ERR_FRAME_END);
+  assert_int_equal(sds011_parser_get_error(&parser), SDS011_ERR_PARSER_FRAME_END);
 
   // okay
   for (int i = 0; i < 9; i++) {

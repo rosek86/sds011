@@ -2,6 +2,7 @@
   "files.associations": {
     ".screenrc": "bat",
     "setjmp.h": "c",
-    "sds011_parser.h": "c"
+    "sds011_parser.h": "c",
+    "cmocka.h": "c"
   }
 }

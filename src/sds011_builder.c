@@ -3,18 +3,20 @@
 #define MSB(v) (((v) & 0xFF00) >> 8)
 #define LSB(v) (((v) & 0x00FF) >> 0)
 
+static sds011_err_t _error = SDS011_OK;
+
 static size_t build_sens_rep_mode(sds011_msg_t const *msg, uint8_t *buf, size_t size);
 static size_t build_host_rep_mode(sds011_msg_t const *msg, uint8_t *buf, size_t size);
-static size_t build_sens_sample(sds011_msg_t const *msg, uint8_t *buf, size_t size);
-static size_t build_host_sample(sds011_msg_t const *msg, uint8_t *buf, size_t size);
-static size_t build_sens_dev_id(sds011_msg_t const *msg, uint8_t *buf, size_t size);
-static size_t build_host_dev_id(sds011_msg_t const *msg, uint8_t *buf, size_t size);
-static size_t build_sens_sleep(sds011_msg_t const *msg, uint8_t *buf, size_t size);
-static size_t build_host_sleep(sds011_msg_t const *msg, uint8_t *buf, size_t size);
-static size_t build_sens_fw_ver(sds011_msg_t const *msg, uint8_t *buf, size_t size);
-static size_t build_host_fw_ver(sds011_msg_t const *msg, uint8_t *buf, size_t size);
-static size_t build_sens_op_mode(sds011_msg_t const *msg, uint8_t *buf, size_t size);
-static size_t build_host_op_mode(sds011_msg_t const *msg, uint8_t *buf, size_t size);
+static size_t build_sens_sample  (sds011_msg_t const *msg, uint8_t *buf, size_t size);
+static size_t build_host_sample  (sds011_msg_t const *msg, uint8_t *buf, size_t size);
+static size_t build_sens_dev_id  (sds011_msg_t const *msg, uint8_t *buf, size_t size);
+static size_t build_host_dev_id  (sds011_msg_t const *msg, uint8_t *buf, size_t size);
+static size_t build_sens_sleep   (sds011_msg_t const *msg, uint8_t *buf, size_t size);
+static size_t build_host_sleep   (sds011_msg_t const *msg, uint8_t *buf, size_t size);
+static size_t build_sens_fw_ver  (sds011_msg_t const *msg, uint8_t *buf, size_t size);
+static size_t build_host_fw_ver  (sds011_msg_t const *msg, uint8_t *buf, size_t size);
+static size_t build_sens_op_mode (sds011_msg_t const *msg, uint8_t *buf, size_t size);
+static size_t build_host_op_mode (sds011_msg_t const *msg, uint8_t *buf, size_t size);
 
 static size_t (*_builder_host[2][SDS011_MSG_TYPE_COUNT])(sds011_msg_t const *msg, uint8_t *buf, size_t size) = {
   {
@@ -41,23 +43,31 @@ static size_t (*_builder_host[2][SDS011_MSG_TYPE_COUNT])(sds011_msg_t const *msg
 };
 
 size_t sds011_builder_build(sds011_msg_t const *msg, uint8_t *buf, size_t size) {
-  if (msg == NULL || buf == NULL) { return 0; }
-  if (msg->src == SDS011_MSG_SRC_HOST   && size < SDS011_QUERY_PACKET_SIZE) {
+  if (msg == NULL || buf == NULL) {
+    _error = SDS011_ERR_INVALID_PARAM;
+    return 0;
+  }
+  if (msg->src == SDS011_MSG_SRC_HOST && size < SDS011_QUERY_PACKET_SIZE) {
+    _error = SDS011_ERR_MEM;
     return 0;
   }
   if (msg->src == SDS011_MSG_SRC_SENSOR && size < SDS011_REPLY_PACKET_SIZE) {
+    _error = SDS011_ERR_MEM;
     return 0;
   }
   if (msg->src != SDS011_MSG_SRC_HOST && msg->src != SDS011_MSG_SRC_SENSOR) {
+    _error = SDS011_ERR_INVALID_SRC;
     return 0;
   }
   if (msg->type >= SDS011_MSG_TYPE_COUNT) {
+    _error = SDS011_ERR_INVALID_MSG_TYPE;
+    return 0;
+  }
+  if (_builder_host[msg->src][msg->type] == NULL) {
+    _error = SDS011_ERR_INVALID_MSG_TYPE;
     return 0;
   }
 
-  if (_builder_host[msg->src][msg->type] == NULL) {
-    return 0;
-  }
   memset(buf, 0, size);
   return _builder_host[msg->src][msg->type](msg, buf, size);
 }
@@ -240,4 +250,8 @@ static size_t build_host_op_mode(sds011_msg_t const *msg, uint8_t *buf, size_t s
   buf[17] = crc;
   buf[18] = SDS011_FRAME_END;
   return SDS011_QUERY_PACKET_SIZE;
+}
+
+sds011_err_t sds011_builder_get_error(void) {
+  return _error;
 }

@@ -4,14 +4,14 @@ project(tests)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -std=c11")
 
 find_library(CMOCKA_LIB cmocka)
+find_path(CMOCKA_INC cmocka.h)
 
-include_directories(
-  /usr/local/include/
-)
+include_directories(${CMOCKA_INC})
 
 add_executable(tests
   ../src/sds011_parser.c    ./tests_parser.c
   ../src/sds011_builder.c   ./tests_builder.c
+  ../src/sds011.c
   ./tests.c
 )
 
