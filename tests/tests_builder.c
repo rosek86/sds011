@@ -184,6 +184,116 @@ static void test_builder_dev_id_set(void **state) {
   assert_memory_equal(buffer, ref2, SDS011_REPLY_PACKET_SIZE);
 }
 
+static void test_builder_sleep_set_on(void **state) {
+  (void) state; /* unused */
+
+  uint8_t buffer[19];
+
+  // host
+  assert_true(sds011_builder_build(&(sds011_msg_t) {
+    .dev_id           = 0xA160,
+    .type             = SDS011_MSG_TYPE_SLEEP,
+    .op               = SDS011_MSG_OP_SET,
+    .src              = SDS011_MSG_SRC_HOST,
+    .data.sleep.value = SDS011_SLEEP_ON
+  }, buffer, sizeof(buffer)));
+  uint8_t ref1[] = {
+    0xAA, 0xB4, 0x06, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xA1, 0x60, 0x08, 0xAB
+  };
+  assert_memory_equal(buffer, ref1, SDS011_QUERY_PACKET_SIZE);
+
+  // sensor
+  assert_true(sds011_builder_build(&(sds011_msg_t) {
+    .dev_id           = 0xA160,
+    .type             = SDS011_MSG_TYPE_SLEEP,
+    .op               = SDS011_MSG_OP_SET,
+    .src              = SDS011_MSG_SRC_SENSOR,
+    .data.sleep.value = SDS011_SLEEP_ON,
+  }, buffer, sizeof(buffer)));
+  uint8_t ref2[] = {
+    0xAA, 0xC5, 0x06, 0x01, 0x00, 0x00, 0xA1, 0x60, 0x08, 0xAB
+  };
+  assert_memory_equal(buffer, ref2, SDS011_REPLY_PACKET_SIZE);
+}
+
+static void test_builder_sleep_set_off(void **state) {
+  (void) state; /* unused */
+
+  uint8_t buffer[19];
+
+  // host
+  assert_true(sds011_builder_build(&(sds011_msg_t) {
+    .dev_id           = 0xA160,
+    .type             = SDS011_MSG_TYPE_SLEEP,
+    .op               = SDS011_MSG_OP_SET,
+    .src              = SDS011_MSG_SRC_HOST,
+    .data.sleep.value = SDS011_SLEEP_OFF
+  }, buffer, sizeof(buffer)));
+  uint8_t ref1[] = {
+    0xAA, 0xB4, 0x06, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xA1, 0x60, 0x09, 0xAB
+  };
+  assert_memory_equal(buffer, ref1, SDS011_QUERY_PACKET_SIZE);
+
+  // sensor
+  assert_true(sds011_builder_build(&(sds011_msg_t) {
+    .dev_id           = 0xA160,
+    .type             = SDS011_MSG_TYPE_SLEEP,
+    .op               = SDS011_MSG_OP_SET,
+    .src              = SDS011_MSG_SRC_SENSOR,
+    .data.sleep.value = SDS011_SLEEP_OFF,
+  }, buffer, sizeof(buffer)));
+  uint8_t ref2[] = {
+    0xAA, 0xC5, 0x06, 0x01, 0x01, 0x00, 0xA1, 0x60, 0x09, 0xAB
+  };
+  assert_memory_equal(buffer, ref2, SDS011_REPLY_PACKET_SIZE);
+}
+
+static void test_builder_sleep_get(void **state) {
+  (void) state; /* unused */
+
+  uint8_t buffer[19];
+
+  // host
+  assert_true(sds011_builder_build(&(sds011_msg_t) {
+    .dev_id           = 0xA160,
+    .type             = SDS011_MSG_TYPE_SLEEP,
+    .op               = SDS011_MSG_OP_GET,
+    .src              = SDS011_MSG_SRC_HOST,
+  }, buffer, sizeof(buffer)));
+  uint8_t ref1[] = {
+    0xAA, 0xB4, 0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xA1, 0x60, 0x07, 0xAB
+  };
+  assert_memory_equal(buffer, ref1, SDS011_QUERY_PACKET_SIZE);
+
+  // sensor
+  assert_true(sds011_builder_build(&(sds011_msg_t) {
+    .dev_id           = 0xA160,
+    .type             = SDS011_MSG_TYPE_SLEEP,
+    .op               = SDS011_MSG_OP_GET,
+    .src              = SDS011_MSG_SRC_SENSOR,
+    .data.sleep.value = SDS011_SLEEP_OFF
+  }, buffer, sizeof(buffer)));
+  uint8_t ref2[] = {
+    0xAA, 0xC5, 0x06, 0x00, 0x01, 0x00, 0xA1, 0x60, 0x08, 0xAB
+  };
+  assert_memory_equal(buffer, ref2, SDS011_REPLY_PACKET_SIZE);
+
+  assert_true(sds011_builder_build(&(sds011_msg_t) {
+    .dev_id           = 0xA160,
+    .type             = SDS011_MSG_TYPE_SLEEP,
+    .op               = SDS011_MSG_OP_GET,
+    .src              = SDS011_MSG_SRC_SENSOR,
+    .data.sleep.value = SDS011_SLEEP_ON
+  }, buffer, sizeof(buffer)));
+  uint8_t ref3[] = {
+    0xAA, 0xC5, 0x06, 0x00, 0x00, 0x00, 0xA1, 0x60, 0x07, 0xAB
+  };
+  assert_memory_equal(buffer, ref3, SDS011_REPLY_PACKET_SIZE);
+}
+
 static void test_builder_fw_ver(void **state) {
   (void) state; /* unused */
 
@@ -218,6 +328,109 @@ static void test_builder_fw_ver(void **state) {
   assert_memory_equal(buffer, ref2, SDS011_REPLY_PACKET_SIZE);
 }
 
+static void test_builder_op_mode_set_periodic(void **state) {
+  (void) state; /* unused */
+
+  uint8_t buffer[19];
+
+  // host
+  assert_true(sds011_builder_build(&(sds011_msg_t) {
+    .dev_id                 = 0xA160,
+    .type                   = SDS011_MSG_TYPE_OP_MODE,
+    .op                     = SDS011_MSG_OP_SET,
+    .src                    = SDS011_MSG_SRC_HOST,
+    .data.op_mode.mode      = SDS011_OP_MODE_INTERVAL,
+    .data.op_mode.interval  = 1,
+  }, buffer, sizeof(buffer)));
+  uint8_t ref1[] = {
+    0xAA, 0xB4, 0x08, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xA1, 0x60, 0x0B, 0xAB
+  };
+  assert_memory_equal(buffer, ref1, SDS011_QUERY_PACKET_SIZE);
+
+  // sensor
+  assert_true(sds011_builder_build(&(sds011_msg_t) {
+    .dev_id                 = 0xA160,
+    .type                   = SDS011_MSG_TYPE_OP_MODE,
+    .op                     = SDS011_MSG_OP_SET,
+    .src                    = SDS011_MSG_SRC_SENSOR,
+    .data.op_mode.mode      = SDS011_OP_MODE_INTERVAL,
+    .data.op_mode.interval  = 1,
+  }, buffer, sizeof(buffer)));
+  uint8_t ref2[] = {
+    0xAA, 0xC5, 0x08, 0x01, 0x01, 0x00, 0xA1, 0x60, 0x0B, 0xAB
+  };
+  assert_memory_equal(buffer, ref2, SDS011_REPLY_PACKET_SIZE);
+}
+
+static void test_builder_op_mode_set_continous(void **state) {
+  (void) state; /* unused */
+
+  uint8_t buffer[19];
+
+  // host
+  assert_true(sds011_builder_build(&(sds011_msg_t) {
+    .dev_id                 = 0xA160,
+    .type                   = SDS011_MSG_TYPE_OP_MODE,
+    .op                     = SDS011_MSG_OP_SET,
+    .src                    = SDS011_MSG_SRC_HOST,
+    .data.op_mode.mode      = SDS011_OP_MODE_CONTINOUS,
+    .data.op_mode.interval  = 0,
+  }, buffer, sizeof(buffer)));
+  uint8_t ref1[] = {
+    0xAA, 0xB4, 0x08, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xA1, 0x60, 0x0A, 0xAB
+  };
+  assert_memory_equal(buffer, ref1, SDS011_QUERY_PACKET_SIZE);
+
+  // sensor
+  assert_true(sds011_builder_build(&(sds011_msg_t) {
+    .dev_id                 = 0xA160,
+    .type                   = SDS011_MSG_TYPE_OP_MODE,
+    .op                     = SDS011_MSG_OP_SET,
+    .src                    = SDS011_MSG_SRC_SENSOR,
+    .data.op_mode.mode      = SDS011_OP_MODE_CONTINOUS,
+    .data.op_mode.interval  = 0,
+  }, buffer, sizeof(buffer)));
+  uint8_t ref2[] = {
+    0xAA, 0xC5, 0x08, 0x01, 0x00, 0x00, 0xA1, 0x60, 0x0A, 0xAB
+  };
+  assert_memory_equal(buffer, ref2, SDS011_REPLY_PACKET_SIZE);
+}
+
+static void test_builder_op_mode_get(void **state) {
+  (void) state; /* unused */
+
+  uint8_t buffer[19];
+
+  // host
+  assert_true(sds011_builder_build(&(sds011_msg_t) {
+    .dev_id           = 0xA160,
+    .type             = SDS011_MSG_TYPE_OP_MODE,
+    .op               = SDS011_MSG_OP_GET,
+    .src              = SDS011_MSG_SRC_HOST,
+  }, buffer, sizeof(buffer)));
+  uint8_t ref1[] = {
+    0xAA, 0xB4, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xA1, 0x60, 0x09, 0xAB
+  };
+  assert_memory_equal(buffer, ref1, SDS011_QUERY_PACKET_SIZE);
+
+  // sensor
+  assert_true(sds011_builder_build(&(sds011_msg_t) {
+    .dev_id                 = 0xA160,
+    .type                   = SDS011_MSG_TYPE_OP_MODE,
+    .op                     = SDS011_MSG_OP_GET,
+    .src                    = SDS011_MSG_SRC_SENSOR,
+    .data.op_mode.mode      = SDS011_OP_MODE_INTERVAL,
+    .data.op_mode.interval  = 2,
+  }, buffer, sizeof(buffer)));
+  uint8_t ref2[] = {
+    0xAA, 0xC5, 0x08, 0x00, 0x02, 0x00, 0xA1, 0x60, 0x0B, 0xAB
+  };
+  assert_memory_equal(buffer, ref2, SDS011_REPLY_PACKET_SIZE);
+}
+
 int tests_builder(void) {
   const struct CMUnitTest tests[] = {
     cmocka_unit_test(test_builder_params),
@@ -225,8 +438,13 @@ int tests_builder(void) {
     cmocka_unit_test(test_builder_rep_mode_set),
     cmocka_unit_test(test_builder_sample),
     cmocka_unit_test(test_builder_dev_id_set),
-
+    cmocka_unit_test(test_builder_sleep_set_on),
+    cmocka_unit_test(test_builder_sleep_set_off),
+    cmocka_unit_test(test_builder_sleep_get),
     cmocka_unit_test(test_builder_fw_ver),
+    cmocka_unit_test(test_builder_op_mode_set_periodic),
+    cmocka_unit_test(test_builder_op_mode_set_continous),
+    cmocka_unit_test(test_builder_op_mode_get)
   };
   return cmocka_run_group_tests(tests, NULL, NULL);
 }
