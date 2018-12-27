@@ -1,11 +1,16 @@
 cmake_minimum_required(VERSION 2.8)
-project(parse_sample)
+project(examples)
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -std=c11")
 
-add_executable(parse_sample
+add_executable(parser_example
   ../src/sds011_parser.c
-  ./parse_sample.c
+  ./parser_example.c
 )
 
-target_link_libraries(parse_sample)
+add_executable(example
+  ../src/sds011_parser.c
+  ../src/sds011_builder.c
+  ../src/sds011.c
+  ./example.c
+)

@@ -14,7 +14,7 @@ extern "C" {
 #endif
 
 typedef void (*sds011_cb_t)(sds011_err_t, sds011_msg_t const *);
-typedef void (*sds011_sample_cb_t)(sds011_msg_sample_t);
+typedef void (*sds011_sample_cb_t)(sds011_msg_t const *);
 
 typedef struct {
   uint32_t msg_timeout;

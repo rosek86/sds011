@@ -219,7 +219,7 @@ static sds011_err_t confirm(sds011_t *self, sds011_err_t err, sds011_msg_t const
 static void on_message(sds011_t *self, sds011_msg_t const *msg) {
   if (msg->type == SDS011_MSG_TYPE_DATA) {
     if (self->cfg.on_sample) {
-      self->cfg.on_sample(msg->data.sample);
+      self->cfg.on_sample(msg);
     }
   }
 
