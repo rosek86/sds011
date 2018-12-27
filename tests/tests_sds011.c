@@ -13,6 +13,7 @@ static uint32_t millis_mock(void) {
 static size_t bytes_available_mock(void) {
   return 0;
 }
+
 static uint8_t read_byte_mock(void) {
   return 0;
 }
