@@ -15,6 +15,8 @@ Low level SDS011 dust sensor library written in C. It should be possible to comp
 
   send one byte to the dust sensor.
 
+More information can be found in `examples/example.c` file.
+
 ## Dependencies
 
 The library itself doesn't require any dependencies apart of the standard C library. However, to compile example or tests cmake and cmocka are required. Examples and tests compilation has been tested on the Ubuntu 18.4 and macOS Mojave.
