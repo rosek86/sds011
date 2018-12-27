@@ -11,7 +11,7 @@ include_directories(${CMOCKA_INC})
 add_executable(tests
   ../src/sds011_parser.c    ./tests_parser.c
   ../src/sds011_builder.c   ./tests_builder.c
-  ../src/sds011.c
+  ../src/sds011.c           ./tests_sds011.c
   ./tests.c
 )
 

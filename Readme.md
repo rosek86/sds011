@@ -1,7 +1,7 @@
 TODO:
   - more examples
   - readme
-  - main module
+  - api description
 
 Dependencies
 Ubuntu:

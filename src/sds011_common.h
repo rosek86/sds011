@@ -41,6 +41,8 @@ typedef enum {
   SDS011_ERR_INVALID_SRC,
   SDS011_ERR_MEM,
   SDS011_ERR_SEND_DATA,
+  SDS011_ERR_BUSY,
+  SDS011_ERR_TIMEOUT
 } sds011_err_t;
 
 typedef enum {

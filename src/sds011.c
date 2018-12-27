@@ -1,31 +1,36 @@
 
 #include <stdint.h>
+
 #include "sds011.h"
 
-#include "sds011_parser.h"
-#include "sds011_builder.h"
+sds011_err_t sds011_init(sds011_t *self, sds011_init_t const *init) {
+  if (self == NULL) { return SDS011_ERR_INVALID_PARAM; }
+  if (init == NULL) { return SDS011_ERR_INVALID_PARAM; }
+  if (init->millis == NULL) { return SDS011_ERR_INVALID_PARAM; }
+  if (init->serial.bytes_available == NULL) {
+    return SDS011_ERR_INVALID_PARAM;
+  }
+  if (init->serial.read_byte == NULL) {
+    return SDS011_ERR_INVALID_PARAM;
+  }
+  if (init->serial.send_byte == NULL) {
+    return SDS011_ERR_INVALID_PARAM;
+  }
 
-// TODO: sds011_t structure
-//       read/write
-//       timeouts
-
-static sds011_parser_t _parser;
-static sds011_init_t _init;
-static sds011_cb_t _cb;
-static sds011_msg_type_t _cb_msg_type;
-
-sds011_err_t send_msg(sds011_msg_t const *msg, sds011_cb_t cb);
-
-sds011_err_t sds011_init(sds011_init_t const *init) {
-  sds011_parser_init(&_parser);
-  _init = *init;
-  _cb = NULL;
-  _cb_msg_type = 0;
+  sds011_parser_init(&self->parser);
+  self->cfg = *init;
+  self->req = (sds011_query_req_t) {
+    .msg_type   = 0,
+    .start_time = 0,
+    .cb         = NULL,
+  };
   return SDS011_OK;
 }
 
-sds011_err_t sds011_query_data(uint16_t dev_id, sds011_cb_t cb) {
-  return send_msg(&(sds011_msg_t) {
+static sds011_err_t send_msg(sds011_t *self, sds011_msg_t const *msg, sds011_cb_t cb);
+
+sds011_err_t sds011_query_data(sds011_t *self, uint16_t dev_id, sds011_cb_t cb) {
+  return send_msg(self, &(sds011_msg_t) {
     .dev_id = dev_id,
     .type   = SDS011_MSG_TYPE_DATA,
     .op     = SDS011_MSG_OP_GET,
@@ -33,8 +38,8 @@ sds011_err_t sds011_query_data(uint16_t dev_id, sds011_cb_t cb) {
   }, cb);
 }
 
-sds011_err_t sds011_set_device_id(uint16_t dev_id, uint16_t new_id, sds011_cb_t cb) {
-  return send_msg(&(sds011_msg_t) {
+sds011_err_t sds011_set_device_id(sds011_t *self, uint16_t dev_id, uint16_t new_id, sds011_cb_t cb) {
+  return send_msg(self, &(sds011_msg_t) {
     .dev_id             = dev_id,
     .type               = SDS011_MSG_TYPE_DEV_ID,
     .op                 = SDS011_MSG_OP_SET,
@@ -43,8 +48,8 @@ sds011_err_t sds011_set_device_id(uint16_t dev_id, uint16_t new_id, sds011_cb_t 
   }, cb);
 }
 
-sds011_err_t sds011_set_reporting_mode_active(uint16_t dev_id, sds011_cb_t cb) {
-  return send_msg(&(sds011_msg_t) {
+sds011_err_t sds011_set_reporting_mode_active(sds011_t *self, uint16_t dev_id, sds011_cb_t cb) {
+  return send_msg(self, &(sds011_msg_t) {
     .dev_id               = dev_id,
     .type                 = SDS011_MSG_TYPE_REP_MODE,
     .op                   = SDS011_MSG_OP_SET,
@@ -53,8 +58,8 @@ sds011_err_t sds011_set_reporting_mode_active(uint16_t dev_id, sds011_cb_t cb) {
   }, cb);
 }
 
-sds011_err_t sds011_set_reporting_mode_query(uint16_t dev_id, sds011_cb_t cb) {
-  return send_msg(&(sds011_msg_t) {
+sds011_err_t sds011_set_reporting_mode_query(sds011_t *self, uint16_t dev_id, sds011_cb_t cb) {
+  return send_msg(self, &(sds011_msg_t) {
     .dev_id               = dev_id,
     .type                 = SDS011_MSG_TYPE_REP_MODE,
     .op                   = SDS011_MSG_OP_SET,
@@ -63,8 +68,8 @@ sds011_err_t sds011_set_reporting_mode_query(uint16_t dev_id, sds011_cb_t cb) {
   }, cb);
 }
 
-sds011_err_t sds011_get_reporting_mode(uint16_t dev_id, sds011_cb_t cb) {
-  return send_msg(&(sds011_msg_t) {
+sds011_err_t sds011_get_reporting_mode(sds011_t *self, uint16_t dev_id, sds011_cb_t cb) {
+  return send_msg(self, &(sds011_msg_t) {
     .dev_id = dev_id,
     .type   = SDS011_MSG_TYPE_REP_MODE,
     .op     = SDS011_MSG_OP_GET,
@@ -72,8 +77,8 @@ sds011_err_t sds011_get_reporting_mode(uint16_t dev_id, sds011_cb_t cb) {
   }, cb);
 }
 
-sds011_err_t sds011_set_sleep_on(uint16_t dev_id, sds011_cb_t cb) {
-  return send_msg(&(sds011_msg_t) {
+sds011_err_t sds011_set_sleep_on(sds011_t *self, uint16_t dev_id, sds011_cb_t cb) {
+  return send_msg(self, &(sds011_msg_t) {
     .dev_id           = dev_id,
     .type             = SDS011_MSG_TYPE_SLEEP,
     .op               = SDS011_MSG_OP_SET,
@@ -82,8 +87,8 @@ sds011_err_t sds011_set_sleep_on(uint16_t dev_id, sds011_cb_t cb) {
   }, cb);
 }
 
-sds011_err_t sds011_set_sleep_off(uint16_t dev_id, sds011_cb_t cb) {
-  return send_msg(&(sds011_msg_t) {
+sds011_err_t sds011_set_sleep_off(sds011_t *self, uint16_t dev_id, sds011_cb_t cb) {
+  return send_msg(self, &(sds011_msg_t) {
     .dev_id           = dev_id,
     .type             = SDS011_MSG_TYPE_SLEEP,
     .op               = SDS011_MSG_OP_SET,
@@ -92,8 +97,8 @@ sds011_err_t sds011_set_sleep_off(uint16_t dev_id, sds011_cb_t cb) {
   }, cb);
 }
 
-sds011_err_t sds011_get_sleep(uint16_t dev_id, sds011_cb_t cb) {
-  return send_msg(&(sds011_msg_t) {
+sds011_err_t sds011_get_sleep(sds011_t *self, uint16_t dev_id, sds011_cb_t cb) {
+  return send_msg(self, &(sds011_msg_t) {
     .dev_id = dev_id,
     .type   = SDS011_MSG_TYPE_SLEEP,
     .op     = SDS011_MSG_OP_GET,
@@ -101,8 +106,8 @@ sds011_err_t sds011_get_sleep(uint16_t dev_id, sds011_cb_t cb) {
   }, cb);
 }
 
-sds011_err_t sds011_set_op_mode_continous(uint16_t dev_id, sds011_cb_t cb) {
-  return send_msg(&(sds011_msg_t) {
+sds011_err_t sds011_set_op_mode_continous(sds011_t *self, uint16_t dev_id, sds011_cb_t cb) {
+  return send_msg(self, &(sds011_msg_t) {
     .dev_id                 = dev_id,
     .type                   = SDS011_MSG_TYPE_OP_MODE,
     .op                     = SDS011_MSG_OP_SET,
@@ -112,8 +117,8 @@ sds011_err_t sds011_set_op_mode_continous(uint16_t dev_id, sds011_cb_t cb) {
   }, cb);
 }
 
-sds011_err_t sds011_set_op_mode_periodic(uint16_t dev_id, uint8_t ival, sds011_cb_t cb) {
-  return send_msg(&(sds011_msg_t) {
+sds011_err_t sds011_set_op_mode_periodic(sds011_t *self, uint16_t dev_id, uint8_t ival, sds011_cb_t cb) {
+  return send_msg(self, &(sds011_msg_t) {
     .dev_id                 = dev_id,
     .type                   = SDS011_MSG_TYPE_OP_MODE,
     .op                     = SDS011_MSG_OP_SET,
@@ -123,8 +128,8 @@ sds011_err_t sds011_set_op_mode_periodic(uint16_t dev_id, uint8_t ival, sds011_c
   }, cb);
 }
 
-sds011_err_t sds011_get_op_mode(uint16_t dev_id, sds011_cb_t cb) {
-  return send_msg(&(sds011_msg_t) {
+sds011_err_t sds011_get_op_mode(sds011_t *self, uint16_t dev_id, sds011_cb_t cb) {
+  return send_msg(self, &(sds011_msg_t) {
     .dev_id = dev_id,
     .type   = SDS011_MSG_TYPE_OP_MODE,
     .op     = SDS011_MSG_OP_GET,
@@ -132,8 +137,8 @@ sds011_err_t sds011_get_op_mode(uint16_t dev_id, sds011_cb_t cb) {
   }, cb);
 }
 
-sds011_err_t sds011_get_fw_ver(uint16_t dev_id, sds011_cb_t cb) {
-  return send_msg(&(sds011_msg_t) {
+sds011_err_t sds011_get_fw_ver(sds011_t *self, uint16_t dev_id, sds011_cb_t cb) {
+  return send_msg(self, &(sds011_msg_t) {
     .dev_id = dev_id,
     .type   = SDS011_MSG_TYPE_FW_VER,
     .op     = SDS011_MSG_OP_GET,
@@ -141,34 +146,56 @@ sds011_err_t sds011_get_fw_ver(uint16_t dev_id, sds011_cb_t cb) {
   }, cb);
 }
 
-static sds011_err_t process_byte(uint8_t byte);
+static sds011_err_t process_byte(sds011_t *self, uint8_t byte);
 
-sds011_err_t sds011_process(void) {
-  process_byte(0);
-  return 0;
+sds011_err_t sds011_process(sds011_t *self) {
+  sds011_err_t err_code = SDS011_OK;
+  while (self->cfg.serial.bytes_available() > 0) {
+    uint8_t byte = self->cfg.serial.read_byte();
+    if ((err_code = process_byte(self, byte)) != SDS011_OK) {
+      return err_code;
+    }
+  }
+  return SDS011_OK;
 }
 
-static sds011_err_t confirm(sds011_err_t err, sds011_msg_t const *msg);
-static void on_message(sds011_msg_t const *msg);
+static sds011_err_t confirm(sds011_t *self, sds011_err_t err, sds011_msg_t const *msg);
+static void on_message(sds011_t *self, sds011_msg_t const *msg);
+static bool is_timeout(sds011_t *self, uint32_t beg, uint32_t timeout);
 
-static sds011_err_t process_byte(uint8_t byte) {
+static sds011_err_t process_byte(sds011_t *self, uint8_t byte) {
   sds011_msg_t msg;
-  sds011_parser_res_t res = sds011_parser_parse(&_parser, byte);
+  sds011_parser_res_t res = sds011_parser_parse(&self->parser, byte);
 
   switch (res) {
     case SDS011_PARSER_RES_RUNNING:
       return SDS011_OK;
     case SDS011_PARSER_RES_ERROR:
-      return confirm(sds011_parser_get_error(&_parser), NULL);
+      return confirm(self, sds011_parser_get_error(&self->parser), NULL);
     case SDS011_PARSER_RES_READY:
-      sds011_parser_get_msg(&_parser, &msg);
-      on_message(&msg);
+      sds011_parser_get_msg(&self->parser, &msg);
+      on_message(self, &msg);
       break;
   }
+
+  // check query timeout
+  if (self->req.cb != NULL) {
+    if (is_timeout(self, self->req.start_time, self->cfg.msg_timeout)) {
+      confirm(self, SDS011_ERR_TIMEOUT, NULL);
+    }
+  }
+
   return SDS011_OK;
 }
 
-static sds011_err_t confirm(sds011_err_t err, sds011_msg_t const *msg) {
+static bool is_timeout(sds011_t *self, uint32_t beg, uint32_t timeout) {
+  if (timeout == 0) {
+    return false;
+  }
+  return (self->cfg.millis() - beg) > timeout;
+}
+
+static sds011_err_t confirm(sds011_t *self, sds011_err_t err, sds011_msg_t const *msg) {
   if (err == SDS011_OK && msg == NULL) {
     return SDS011_ERR_INVALID_PARAM;
   }
@@ -177,52 +204,66 @@ static sds011_err_t confirm(sds011_err_t err, sds011_msg_t const *msg) {
   }
 
   if (err != SDS011_OK) {
-    if (_cb) { _cb(err, NULL); }
-    _cb = NULL;
-    _cb_msg_type = 0;
-  } else if (msg->type == _cb_msg_type) {
-    if (_cb) { _cb(err, msg); }
-    _cb = NULL;
-    _cb_msg_type = 0;
+    if (self->req.cb) { self->req.cb(err, NULL); }
+    self->req.cb = NULL;
+    self->req.msg_type = 0;
+  } else if (msg->type == self->req.msg_type) {
+    if (self->req.cb) { self->req.cb(err, msg); }
+    self->req.cb = NULL;
+    self->req.msg_type = 0;
   }
 
   return err;
 }
 
-static void on_message(sds011_msg_t const *msg) {
+static void on_message(sds011_t *self, sds011_msg_t const *msg) {
   if (msg->type == SDS011_MSG_TYPE_DATA) {
-    if (_init.on_sample) {
-      _init.on_sample(msg->data.sample);
+    if (self->cfg.on_sample) {
+      self->cfg.on_sample(msg->data.sample);
     }
   }
 
-  confirm(SDS011_OK, msg);
+  confirm(self, SDS011_OK, msg);
 }
 
-bool send_buffer(uint8_t *buf, size_t size);
+static bool send_buffer(sds011_t *self, uint8_t *buf, size_t size);
 
-sds011_err_t send_msg(sds011_msg_t const *msg, sds011_cb_t cb) {
+static sds011_err_t send_msg(sds011_t *self, sds011_msg_t const *msg, sds011_cb_t cb) {
   static uint8_t buffer[SDS011_QUERY_PACKET_SIZE];
-
-  // TODO validate busy
-  _cb = cb;
-  _cb_msg_type = msg->type;
-
   size_t bytes;
-  bytes = sds011_builder_build(msg, buffer, sizeof(buffer));
-  if (bytes == 0) {
+
+  if (self == NULL) {
+    return SDS011_ERR_INVALID_PARAM;
+  }
+
+  if (self->req.cb != NULL || self->req.msg_type != 0) {
+    return SDS011_ERR_BUSY;
+  }
+
+  self->req.cb         = cb;
+  self->req.msg_type   = msg->type;
+  self->req.start_time = self->cfg.millis();
+
+  if ((bytes = sds011_builder_build(msg, buffer, sizeof(buffer))) == 0) {
     return sds011_builder_get_error();
   }
-  if (send_buffer(buffer, bytes) == false) {
+
+  if (send_buffer(self, buffer, bytes) == false) {
     return SDS011_ERR_SEND_DATA;
   }
-
-  // TODO implement blocking version
 
   return SDS011_OK;
 }
 
-bool send_buffer(uint8_t *buf, size_t size) {
-  // TODO implement + timeout
+static bool send_buffer(sds011_t *self, uint8_t *buf, size_t size) {
+  uint32_t beg = self->cfg.millis();
+
+  for (size_t i = 0; i < size; i++) {
+    while (self->cfg.serial.send_byte(buf[i]) == false) {
+      if (is_timeout(self, beg, self->cfg.msg_send_timeout)) {
+        return false;
+      }
+    }
+  }
   return true;
 }
