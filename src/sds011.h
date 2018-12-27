@@ -160,6 +160,11 @@ sds011_err_t sds011_get_op_mode(sds011_t *self, uint16_t dev_id, sds011_cb_t cb)
  */
 sds011_err_t sds011_get_fw_ver(sds011_t *self, uint16_t dev_id, sds011_cb_t cb);
 
+/**
+ * Processing function. This function should be called periodically,
+ * in the main loop.
+ * @param self pointer to the sensor instance
+ */
 sds011_err_t sds011_process(sds011_t *self);
 
 #ifdef __cplusplus
