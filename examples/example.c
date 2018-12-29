@@ -5,9 +5,9 @@
 
 // Mock prototypes
 static uint32_t mock_millis(void);
-static size_t mock_bytes_available(void);
-static uint8_t mock_read_byte(void);
-static bool mock_send_byte(uint8_t byte);
+static size_t mock_bytes_available(void *user_data);
+static uint8_t mock_read_byte(void *user_data);
+static bool mock_send_byte(uint8_t byte, void *user_data);
 // --
 
 // General query callback
@@ -28,7 +28,7 @@ static void sds011_cb(sds011_err_t err_code, sds011_msg_t const *msg) {
 static bool _new_sample = false;
 static sds011_msg_t _new_sample_msg;
 
-static void on_sample(sds011_msg_t const *msg) {
+static void on_sample(sds011_msg_t const *msg, void *user_data) {
   if (msg) {
     _new_sample = true;
     _new_sample_msg = *msg;
@@ -43,13 +43,17 @@ int main(void) {
     .msg_timeout      = 2000, // set reply timeout to 2s
     .msg_send_timeout = 500,  // set send timeout to 0.5 s
     .millis           = mock_millis,
-    .on_sample        = on_sample,
     .serial = {
       .bytes_available  = mock_bytes_available,
       .read_byte        = mock_read_byte,
       .send_byte        = mock_send_byte
     },
   });
+  if (err_code != SDS011_OK) {
+    return 1;
+  }
+
+  err_code = sds011_set_sample_callback(&sds011, on_sample, NULL);
   if (err_code != SDS011_OK) {
     return 1;
   }
@@ -103,19 +107,19 @@ static uint32_t mock_millis(void) {
   return 0;
 }
 
-static size_t mock_bytes_available(void) {
+static size_t mock_bytes_available(void *user_data) {
   // This function returns number of bytes
   // in the serial input queue
   return sizeof(_serial_buffer) - _serial_buffer_iter;
 }
 
-static uint8_t mock_read_byte(void) {
+static uint8_t mock_read_byte(void *user_data) {
   // This function retunrs single byte from the
   // serial input queue
   return _serial_buffer[_serial_buffer_iter++];
 }
 
-static bool mock_send_byte(uint8_t byte) {
+static bool mock_send_byte(uint8_t byte, void *user_data) {
   // This function will send data via serial interface
   // and return true on success, false otherwise.
   return true;

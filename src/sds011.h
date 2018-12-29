@@ -14,19 +14,19 @@ extern "C" {
 #endif
 
 typedef void (*sds011_cb_t)(sds011_err_t, sds011_msg_t const *);
-typedef void (*sds011_sample_cb_t)(sds011_msg_t const *);
+typedef void (*sds011_sample_cb_t)(sds011_msg_t const *, void *);
 
 typedef struct {
   uint32_t msg_timeout;
   uint32_t msg_send_timeout;
 
   uint32_t (*millis)(void);
-  sds011_sample_cb_t on_sample;
 
   struct {
-    size_t (*bytes_available)(void);
-    uint8_t (*read_byte)(void);
-    bool (*send_byte)(uint8_t);
+    size_t (*bytes_available)(void *user_data);
+    uint8_t (*read_byte)(void *user_data);
+    bool (*send_byte)(uint8_t, void *user_data);
+    void *user_data;
   } serial;
 } sds011_init_t;
 
@@ -37,9 +37,15 @@ typedef struct {
 } sds011_query_req_t;
 
 typedef struct {
+  sds011_sample_cb_t callback;
+  void *user_data;
+} sds011_on_sample_t;
+
+typedef struct {
   sds011_init_t cfg;
   sds011_parser_t parser;
   sds011_query_req_t req;
+  sds011_on_sample_t on_sample;
 } sds011_t;
 
 /**
@@ -49,6 +55,14 @@ typedef struct {
  * @return SDS011_OK on success, otherwise error code
  */
 sds011_err_t sds011_init(sds011_t *self, sds011_init_t const *init);
+
+/**
+ * Set on sample callback, the callback is called when new sample is received.
+ * @param self pointer to the sensor instance
+ * @param cb on sample callback
+ * @param user_data pointer to a data passed with each call.
+ */
+sds011_err_t sds011_set_sample_callback(sds011_t *self, sds011_sample_cb_t cb, void *user_data);
 
 /**
  * Query dust sensor data

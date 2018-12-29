@@ -10,17 +10,17 @@ static uint32_t millis_mock(void) {
   return 0;
 }
 
-static size_t bytes_available_mock(void) {
+static size_t bytes_available_mock(void *user_data) {
   return 0;
 }
 
-static uint8_t read_byte_mock(void) {
+static uint8_t read_byte_mock(void *user_data) {
   return 0;
 }
 
 static uint32_t send_byte_iter = 0;
 static uint8_t send_byte_buffer[32];
-static bool send_byte_mock(uint8_t byte) {
+static bool send_byte_mock(uint8_t byte, void *user_data) {
   if (send_byte_iter < sizeof(send_byte_buffer)) {
     send_byte_buffer[send_byte_iter++] = byte;
   }

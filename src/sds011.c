@@ -24,6 +24,21 @@ sds011_err_t sds011_init(sds011_t *self, sds011_init_t const *init) {
     .start_time = 0,
     .cb         = NULL,
   };
+  self->on_sample = (sds011_on_sample_t) {
+    .callback = NULL,
+    .user_data = NULL,
+  };
+  return SDS011_OK;
+}
+
+sds011_err_t sds011_set_sample_callback(sds011_t *self, sds011_sample_cb_t cb, void *user_data) {
+  if (self == NULL) { return SDS011_ERR_INVALID_PARAM; }
+
+  self->on_sample = (sds011_on_sample_t) {
+    .callback = cb,
+    .user_data = user_data,
+  };
+
   return SDS011_OK;
 }
 
@@ -150,8 +165,8 @@ static sds011_err_t process_byte(sds011_t *self, uint8_t byte);
 
 sds011_err_t sds011_process(sds011_t *self) {
   sds011_err_t err_code = SDS011_OK;
-  while (self->cfg.serial.bytes_available() > 0) {
-    uint8_t byte = self->cfg.serial.read_byte();
+  while (self->cfg.serial.bytes_available(self->cfg.serial.user_data) > 0) {
+    uint8_t byte = self->cfg.serial.read_byte(self->cfg.serial.user_data);
     if ((err_code = process_byte(self, byte)) != SDS011_OK) {
       return err_code;
     }
@@ -218,8 +233,8 @@ static sds011_err_t confirm(sds011_t *self, sds011_err_t err, sds011_msg_t const
 
 static void on_message(sds011_t *self, sds011_msg_t const *msg) {
   if (msg->type == SDS011_MSG_TYPE_DATA) {
-    if (self->cfg.on_sample) {
-      self->cfg.on_sample(msg);
+    if (self->on_sample.callback) {
+      self->on_sample.callback(msg, self->on_sample.user_data);
     }
   }
 
@@ -259,7 +274,7 @@ static bool send_buffer(sds011_t *self, uint8_t *buf, size_t size) {
   uint32_t beg = self->cfg.millis();
 
   for (size_t i = 0; i < size; i++) {
-    while (self->cfg.serial.send_byte(buf[i]) == false) {
+    while (self->cfg.serial.send_byte(buf[i], self->cfg.serial.user_data) == false) {
       if (is_timeout(self, beg, self->cfg.msg_send_timeout)) {
         return false;
       }
