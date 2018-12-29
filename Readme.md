@@ -56,7 +56,7 @@ make
 
 ## TODO
 
-- requests retry
-- passs user data in all callbacks
-- request callbacks, in case of error there is no info about message which failed (do we need this?)
-- In case of set command, validate reply and check if sensor returned expected value.
+- unit tests callbacks
+- set param request, validate reply and check if sensor returned expected value.
+- requests retry?
+- request callbacks, in case of error there is no info about message which failed (do we need this?).

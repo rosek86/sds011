@@ -15,7 +15,7 @@ static bool _cb_exec = false;
 static sds011_err_t _cb_err_code;
 static sds011_msg_t _cb_msg;
 
-static void sds011_cb(sds011_err_t err_code, sds011_msg_t const *msg) {
+static void sds011_cb(sds011_err_t err_code, sds011_msg_t const *msg, void *user_data) {
   _cb_exec = true;
   _cb_err_code = err_code;
 
@@ -53,7 +53,10 @@ int main(void) {
     return 1;
   }
 
-  err_code = sds011_set_sample_callback(&sds011, on_sample, NULL);
+  err_code = sds011_set_sample_callback(&sds011, (sds011_on_sample_t) {
+    .callback = on_sample,
+    .user_data = NULL,
+  });
   if (err_code != SDS011_OK) {
     return 1;
   }
@@ -61,7 +64,10 @@ int main(void) {
   _cb_exec = false;
 
   // Request firware version
-  err_code = sds011_get_fw_ver(&sds011, 0xA160, sds011_cb);
+  err_code = sds011_get_fw_ver(&sds011, 0xA160, (sds011_cb_t) {
+    .callback = sds011_cb,
+    .user_data = NULL
+  });
   if (err_code != SDS011_OK) {
     return 1;
   }

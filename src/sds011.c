@@ -20,9 +20,12 @@ sds011_err_t sds011_init(sds011_t *self, sds011_init_t const *init) {
   sds011_parser_init(&self->parser);
   self->cfg = *init;
   self->req = (sds011_query_req_t) {
-    .msg_type   = 0,
+    .msg_type = 0,
     .start_time = 0,
-    .cb         = NULL,
+    .cb = {
+      .callback = NULL,
+      .user_data = NULL,
+    },
   };
   self->on_sample = (sds011_on_sample_t) {
     .callback = NULL,
@@ -31,14 +34,9 @@ sds011_err_t sds011_init(sds011_t *self, sds011_init_t const *init) {
   return SDS011_OK;
 }
 
-sds011_err_t sds011_set_sample_callback(sds011_t *self, sds011_sample_cb_t cb, void *user_data) {
+sds011_err_t sds011_set_sample_callback(sds011_t *self, sds011_on_sample_t cb) {
   if (self == NULL) { return SDS011_ERR_INVALID_PARAM; }
-
-  self->on_sample = (sds011_on_sample_t) {
-    .callback = cb,
-    .user_data = user_data,
-  };
-
+  self->on_sample = cb;
   return SDS011_OK;
 }
 
@@ -194,7 +192,7 @@ static sds011_err_t process_byte(sds011_t *self, uint8_t byte) {
   }
 
   // check query timeout
-  if (self->req.cb != NULL) {
+  if (self->req.cb.callback != NULL) {
     if (is_timeout(self, self->req.start_time, self->cfg.msg_timeout)) {
       confirm(self, SDS011_ERR_TIMEOUT, NULL);
     }
@@ -210,6 +208,9 @@ static bool is_timeout(sds011_t *self, uint32_t beg, uint32_t timeout) {
   return (self->cfg.millis() - beg) > timeout;
 }
 
+static inline void call_cb(sds011_cb_t *cb, sds011_err_t err, sds011_msg_t const *msg);
+static inline void clear_req(sds011_query_req_t *req);
+
 static sds011_err_t confirm(sds011_t *self, sds011_err_t err, sds011_msg_t const *msg) {
   if (err == SDS011_OK && msg == NULL) {
     return SDS011_ERR_INVALID_PARAM;
@@ -219,16 +220,26 @@ static sds011_err_t confirm(sds011_t *self, sds011_err_t err, sds011_msg_t const
   }
 
   if (err != SDS011_OK) {
-    if (self->req.cb) { self->req.cb(err, NULL); }
-    self->req.cb = NULL;
-    self->req.msg_type = 0;
+    call_cb(&self->req.cb, err, NULL);
+    clear_req(&self->req);
   } else if (msg->type == self->req.msg_type) {
-    if (self->req.cb) { self->req.cb(err, msg); }
-    self->req.cb = NULL;
-    self->req.msg_type = 0;
+    call_cb(&self->req.cb, SDS011_OK, msg);
+    clear_req(&self->req);
   }
 
   return err;
+}
+
+static inline void call_cb(sds011_cb_t *cb, sds011_err_t err, sds011_msg_t const *msg) {
+  if (cb->callback) {
+    cb->callback(err, msg, cb->user_data);
+  }
+}
+
+static inline void clear_req(sds011_query_req_t *req) {
+  req->cb.callback = NULL;
+  req->cb.user_data = NULL;
+  req->msg_type = 0;
 }
 
 static void on_message(sds011_t *self, sds011_msg_t const *msg) {
@@ -251,7 +262,7 @@ static sds011_err_t send_msg(sds011_t *self, sds011_msg_t const *msg, sds011_cb_
     return SDS011_ERR_INVALID_PARAM;
   }
 
-  if (self->req.cb != NULL || self->req.msg_type != 0) {
+  if (self->req.cb.callback != NULL || self->req.msg_type != 0) {
     return SDS011_ERR_BUSY;
   }
 
