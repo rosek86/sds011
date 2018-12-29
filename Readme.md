@@ -56,7 +56,4 @@ make
 
 ## TODO
 
-- unit tests callbacks
-- set param request, validate reply and check if sensor returned expected value.
-- requests retry?
-- request callbacks, in case of error there is no info about message which failed (do we need this?).
+- requests retry (in case of timeout or invalid response)

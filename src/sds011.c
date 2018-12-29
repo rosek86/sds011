@@ -17,20 +17,10 @@ sds011_err_t sds011_init(sds011_t *self, sds011_init_t const *init) {
     return SDS011_ERR_INVALID_PARAM;
   }
 
-  sds011_parser_init(&self->parser);
   self->cfg = *init;
-  self->req = (sds011_query_req_t) {
-    .msg_type = 0,
-    .start_time = 0,
-    .cb = {
-      .callback = NULL,
-      .user_data = NULL,
-    },
-  };
-  self->on_sample = (sds011_on_sample_t) {
-    .callback = NULL,
-    .user_data = NULL,
-  };
+  sds011_parser_init(&self->parser);
+  memset(&self->req, 0, sizeof(self->req));
+  memset(&self->on_sample, 0, sizeof(self->on_sample));
   return SDS011_OK;
 }
 
@@ -172,9 +162,9 @@ sds011_err_t sds011_process(sds011_t *self) {
   return SDS011_OK;
 }
 
-static sds011_err_t confirm(sds011_t *self, sds011_err_t err, sds011_msg_t const *msg);
 static void on_message(sds011_t *self, sds011_msg_t const *msg);
 static bool is_timeout(sds011_t *self, uint32_t beg, uint32_t timeout);
+static void confirm(sds011_t *self, sds011_err_t err, sds011_msg_t const *msg);
 
 static sds011_err_t process_byte(sds011_t *self, uint8_t byte) {
   sds011_msg_t msg;
@@ -184,7 +174,7 @@ static sds011_err_t process_byte(sds011_t *self, uint8_t byte) {
     case SDS011_PARSER_RES_RUNNING:
       return SDS011_OK;
     case SDS011_PARSER_RES_ERROR:
-      return confirm(self, sds011_parser_get_error(&self->parser), NULL);
+      return sds011_parser_get_error(&self->parser);
     case SDS011_PARSER_RES_READY:
       sds011_parser_get_msg(&self->parser, &msg);
       on_message(self, &msg);
@@ -211,23 +201,9 @@ static bool is_timeout(sds011_t *self, uint32_t beg, uint32_t timeout) {
 static inline void call_cb(sds011_cb_t *cb, sds011_err_t err, sds011_msg_t const *msg);
 static inline void clear_req(sds011_query_req_t *req);
 
-static sds011_err_t confirm(sds011_t *self, sds011_err_t err, sds011_msg_t const *msg) {
-  if (err == SDS011_OK && msg == NULL) {
-    return SDS011_ERR_INVALID_PARAM;
-  }
-  if (err != SDS011_OK && msg != NULL) {
-    return SDS011_ERR_INVALID_PARAM;
-  }
-
-  if (err != SDS011_OK) {
-    call_cb(&self->req.cb, err, NULL);
-    clear_req(&self->req);
-  } else if (msg->type == self->req.msg_type) {
-    call_cb(&self->req.cb, SDS011_OK, msg);
-    clear_req(&self->req);
-  }
-
-  return err;
+static void confirm(sds011_t *self, sds011_err_t err, sds011_msg_t const *msg) {
+  call_cb(&self->req.cb, err, msg);
+  clear_req(&self->req);
 }
 
 static inline void call_cb(sds011_cb_t *cb, sds011_err_t err, sds011_msg_t const *msg) {
@@ -237,10 +213,10 @@ static inline void call_cb(sds011_cb_t *cb, sds011_err_t err, sds011_msg_t const
 }
 
 static inline void clear_req(sds011_query_req_t *req) {
-  req->cb.callback = NULL;
-  req->cb.user_data = NULL;
-  req->msg_type = 0;
+  memset(req, 0, sizeof(sds011_query_req_t));
 }
+
+static bool is_callback_for_msg(sds011_t *self, sds011_msg_t const *msg);
 
 static void on_message(sds011_t *self, sds011_msg_t const *msg) {
   if (msg->type == SDS011_MSG_TYPE_DATA) {
@@ -249,7 +225,34 @@ static void on_message(sds011_t *self, sds011_msg_t const *msg) {
     }
   }
 
-  confirm(self, SDS011_OK, msg);
+  if (is_callback_for_msg(self, msg) == false) {
+    return;
+  }
+
+  if (sds011_validator_validate(&self->req.msg, msg) == false) {
+    confirm(self, SDS011_ERR_INVALID_REPLY, msg);
+  } else {
+    confirm(self, SDS011_OK, msg);
+  }
+}
+
+static bool is_callback_for_msg(sds011_t *self, sds011_msg_t const *msg) {
+  if (self->req.cb.callback == NULL) { return false; }
+
+  if (self->req.msg.type != msg->type) { return false; }
+  if (self->req.msg.op   != msg->op  ) { return false; }
+
+  if (msg->type == SDS011_MSG_TYPE_DEV_ID) {
+    if (self->req.msg.data.dev_id.new_id != msg->dev_id) {
+      return false;
+    }
+  }
+
+  if (self->req.msg.dev_id != msg->dev_id) {
+    return false;
+  }
+
+  return true;
 }
 
 static bool send_buffer(sds011_t *self, uint8_t *buf, size_t size);
@@ -262,13 +265,9 @@ static sds011_err_t send_msg(sds011_t *self, sds011_msg_t const *msg, sds011_cb_
     return SDS011_ERR_INVALID_PARAM;
   }
 
-  if (self->req.cb.callback != NULL || self->req.msg_type != 0) {
+  if (self->req.cb.callback != NULL) {
     return SDS011_ERR_BUSY;
   }
-
-  self->req.cb         = cb;
-  self->req.msg_type   = msg->type;
-  self->req.start_time = self->cfg.millis();
 
   if ((bytes = sds011_builder_build(msg, buffer, sizeof(buffer))) == 0) {
     return sds011_builder_get_error();
@@ -277,6 +276,10 @@ static sds011_err_t send_msg(sds011_t *self, sds011_msg_t const *msg, sds011_cb_
   if (send_buffer(self, buffer, bytes) == false) {
     return SDS011_ERR_SEND_DATA;
   }
+
+  self->req.cb         = cb;
+  self->req.msg        = *msg;
+  self->req.start_time = self->cfg.millis();
 
   return SDS011_OK;
 }

@@ -10,11 +10,20 @@ static uint32_t millis_mock(void) {
   return 0;
 }
 
+static uint32_t _bytes_available = 0;
 static size_t bytes_available_mock(void *user_data) {
-  return 0;
+  return _bytes_available;
 }
 
+static uint32_t read_byte_iter = 0;
+static uint8_t read_byte_buffer[32];
 static uint8_t read_byte_mock(void *user_data) {
+  if (_bytes_available > 0) {
+    _bytes_available--;
+  }
+  if (read_byte_iter < sizeof(read_byte_buffer)) {
+    return read_byte_buffer[read_byte_iter++];
+  }
   return 0;
 }
 
@@ -350,6 +359,57 @@ static void test_get_fw_ver(void **state) {
   assert_memory_equal(send_byte_buffer, ref, SDS011_QUERY_PACKET_SIZE);
 }
 
+static uint32_t _cmd_cb_call_cnt;
+static sds011_err_t _cmd_cb_err;
+static sds011_msg_t const *_cmd_cb_msg;
+static void cmd_callback(sds011_err_t err, sds011_msg_t const *msg, void *user_data) {
+  (void) user_data;
+
+  _cmd_cb_call_cnt++;
+  _cmd_cb_err = err;
+  _cmd_cb_msg = msg;
+}
+
+static void test_validate_set_result(void **state) {
+  (void) state; /* unused */
+
+  // send interval value 1 but receive interval value 2
+
+  sds011_t sds011;
+
+  assert_int_equal(sds011_init(&sds011, &(sds011_init_t) {
+    .millis = millis_mock,
+    .serial = {
+      .bytes_available  = bytes_available_mock,
+      .read_byte        = read_byte_mock,
+      .send_byte        = send_byte_mock
+    },
+  }), SDS011_OK);
+
+  assert_int_equal(sds011_set_op_mode_periodic(&sds011, 0xA160, 1, (sds011_cb_t) {
+    .callback = cmd_callback,
+    .user_data = NULL,
+  }), SDS011_OK);
+
+  size_t size = sds011_builder_build(&(sds011_msg_t) {
+    .dev_id                 = 0xA160,
+    .type                   = SDS011_MSG_TYPE_OP_MODE,
+    .op                     = SDS011_MSG_OP_SET,
+    .src                    = SDS011_MSG_SRC_SENSOR,
+    .data.op_mode.mode      = SDS011_OP_MODE_INTERVAL,
+    .data.op_mode.interval  = 2,
+  }, read_byte_buffer, sizeof(read_byte_buffer));
+  assert_true(size > 0);
+
+  read_byte_iter = 0;
+  _cmd_cb_call_cnt = 0;
+  _bytes_available = size;
+
+  assert_int_equal(sds011_process(&sds011), SDS011_OK);
+  assert_int_equal(_cmd_cb_call_cnt, 1);
+  assert_int_not_equal(_cmd_cb_err, SDS011_OK);
+}
+
 int tests_sds011(void) {
   const struct CMUnitTest tests[] = {
     cmocka_unit_test(test_init),
@@ -365,6 +425,7 @@ int tests_sds011(void) {
     cmocka_unit_test(test_set_op_mode_periodic),
     cmocka_unit_test(test_get_op_mode),
     cmocka_unit_test(test_get_fw_ver),
+    cmocka_unit_test(test_validate_set_result)
   };
   return cmocka_run_group_tests(tests, NULL, NULL);
 }

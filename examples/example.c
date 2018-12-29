@@ -87,6 +87,7 @@ int main(void) {
   }
 
   if (_cb_err_code != SDS011_OK) {
+    printf("callback error: %d\n", _cb_err_code);
     return 1;
   }
 

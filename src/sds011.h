@@ -8,6 +8,7 @@
 #include "sds011_common.h"
 #include "sds011_parser.h"
 #include "sds011_builder.h"
+#include "sds011_validator.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -33,7 +34,7 @@ typedef struct {
 } sds011_cb_t;
 
 typedef struct {
-  sds011_msg_type_t msg_type;
+  sds011_msg_t msg;
   uint32_t start_time;
   sds011_cb_t cb;
 } sds011_query_req_t;
