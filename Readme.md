@@ -17,6 +17,12 @@ Low level SDS011 dust sensor library written in C. It should be possible to comp
 
 More information can be found in the `examples/example.c` file.
 
+## Main features
+
+- Can support multipe sensors connected to the same port (with RS485), or multiple sensors connected to multiple ports.
+- Fully asynchronous, callback based communication.
+- Easily portable to new targets.
+
 ## Dependencies
 
 The library itself doesn't require any dependencies apart of the standard C library. However, to compile example or tests cmake and cmocka are required. Examples and tests compilation has been tested on the Ubuntu 18.4 and macOS Mojave.

@@ -149,10 +149,20 @@ sds011_err_t sds011_get_fw_ver(sds011_t *self, uint16_t dev_id, sds011_cb_t cb) 
   }, cb);
 }
 
+static bool is_timeout(sds011_t *self, uint32_t beg, uint32_t timeout);
+static void confirm(sds011_t *self, sds011_err_t err, sds011_msg_t const *msg);
 static sds011_err_t process_byte(sds011_t *self, uint8_t byte);
 
 sds011_err_t sds011_process(sds011_t *self) {
   sds011_err_t err_code = SDS011_OK;
+
+  // check query timeout
+  if (self->req.cb.callback != NULL) {
+    if (is_timeout(self, self->req.start_time, self->cfg.msg_timeout)) {
+      confirm(self, SDS011_ERR_TIMEOUT, NULL);
+    }
+  }
+
   while (self->cfg.serial.bytes_available(self->cfg.serial.user_data) > 0) {
     uint8_t byte = self->cfg.serial.read_byte(self->cfg.serial.user_data);
     if ((err_code = process_byte(self, byte)) != SDS011_OK) {
@@ -163,8 +173,6 @@ sds011_err_t sds011_process(sds011_t *self) {
 }
 
 static void on_message(sds011_t *self, sds011_msg_t const *msg);
-static bool is_timeout(sds011_t *self, uint32_t beg, uint32_t timeout);
-static void confirm(sds011_t *self, sds011_err_t err, sds011_msg_t const *msg);
 
 static sds011_err_t process_byte(sds011_t *self, uint8_t byte) {
   sds011_msg_t msg;
@@ -179,13 +187,6 @@ static sds011_err_t process_byte(sds011_t *self, uint8_t byte) {
       sds011_parser_get_msg(&self->parser, &msg);
       on_message(self, &msg);
       break;
-  }
-
-  // check query timeout
-  if (self->req.cb.callback != NULL) {
-    if (is_timeout(self, self->req.start_time, self->cfg.msg_timeout)) {
-      confirm(self, SDS011_ERR_TIMEOUT, NULL);
-    }
   }
 
   return SDS011_OK;
