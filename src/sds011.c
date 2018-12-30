@@ -249,8 +249,10 @@ static bool is_callback_for_msg(sds011_t *self, sds011_msg_t const *msg) {
     }
   }
 
-  if (self->req.msg.dev_id != msg->dev_id) {
-    return false;
+  if (self->req.msg.dev_id != 0xFFFF) {
+    if (self->req.msg.dev_id != msg->dev_id) {
+      return false;
+    }
   }
 
   return true;

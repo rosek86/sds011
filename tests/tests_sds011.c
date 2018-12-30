@@ -36,6 +36,18 @@ static bool send_byte_mock(uint8_t byte, void *user_data) {
   return true;
 }
 
+// helper initialization function
+static void init_sds011(sds011_t *sds011) {
+  assert_int_equal(sds011_init(sds011, &(sds011_init_t) {
+    .millis = millis_mock,
+    .serial = {
+      .bytes_available  = bytes_available_mock,
+      .read_byte        = read_byte_mock,
+      .send_byte        = send_byte_mock
+    },
+  }), SDS011_OK);
+}
+
 static void test_init(void **state) {
   (void) state; /* unused */
 
@@ -63,15 +75,7 @@ static void test_query_data(void **state) {
   (void) state; /* unused */
 
   sds011_t sds011;
-
-  assert_int_equal(sds011_init(&sds011, &(sds011_init_t) {
-    .millis = millis_mock,
-    .serial = {
-      .bytes_available = bytes_available_mock,
-      .read_byte = read_byte_mock,
-      .send_byte = send_byte_mock
-    },
-  }), SDS011_OK);
+  init_sds011(&sds011);
 
   assert_int_equal(sds011_query_data(NULL, 0, (sds011_cb_t){NULL, NULL}), SDS011_ERR_INVALID_PARAM);
 
@@ -88,15 +92,7 @@ static void test_set_dev_id(void **state) {
   (void) state; /* unused */
 
   sds011_t sds011;
-
-  assert_int_equal(sds011_init(&sds011, &(sds011_init_t) {
-    .millis = millis_mock,
-    .serial = {
-      .bytes_available = bytes_available_mock,
-      .read_byte = read_byte_mock,
-      .send_byte = send_byte_mock
-    },
-  }), SDS011_OK);
+  init_sds011(&sds011);
 
   assert_int_equal(sds011_set_device_id(NULL, 0, 0, (sds011_cb_t){NULL, NULL}), SDS011_ERR_INVALID_PARAM);
 
@@ -113,15 +109,7 @@ static void test_set_reporting_active(void **state) {
   (void) state; /* unused */
 
   sds011_t sds011;
-
-  assert_int_equal(sds011_init(&sds011, &(sds011_init_t) {
-    .millis = millis_mock,
-    .serial = {
-      .bytes_available = bytes_available_mock,
-      .read_byte = read_byte_mock,
-      .send_byte = send_byte_mock
-    },
-  }), SDS011_OK);
+  init_sds011(&sds011);
 
   assert_int_equal(sds011_set_reporting_mode_active(NULL, 0, (sds011_cb_t){NULL, NULL}), SDS011_ERR_INVALID_PARAM);
 
@@ -138,15 +126,7 @@ static void test_set_reporting_query(void **state) {
   (void) state; /* unused */
 
   sds011_t sds011;
-
-  assert_int_equal(sds011_init(&sds011, &(sds011_init_t) {
-    .millis = millis_mock,
-    .serial = {
-      .bytes_available = bytes_available_mock,
-      .read_byte = read_byte_mock,
-      .send_byte = send_byte_mock
-    },
-  }), SDS011_OK);
+  init_sds011(&sds011);
 
   assert_int_equal(sds011_set_reporting_mode_query(NULL, 0, (sds011_cb_t){NULL, NULL}), SDS011_ERR_INVALID_PARAM);
 
@@ -163,15 +143,7 @@ static void test_get_reporting(void **state) {
   (void) state; /* unused */
 
   sds011_t sds011;
-
-  assert_int_equal(sds011_init(&sds011, &(sds011_init_t) {
-    .millis = millis_mock,
-    .serial = {
-      .bytes_available = bytes_available_mock,
-      .read_byte = read_byte_mock,
-      .send_byte = send_byte_mock
-    },
-  }), SDS011_OK);
+  init_sds011(&sds011);
 
   assert_int_equal(sds011_get_reporting_mode(NULL, 0, (sds011_cb_t){NULL, NULL}), SDS011_ERR_INVALID_PARAM);
 
@@ -188,15 +160,7 @@ static void test_set_sleep_on(void **state) {
   (void) state; /* unused */
 
   sds011_t sds011;
-
-  assert_int_equal(sds011_init(&sds011, &(sds011_init_t) {
-    .millis = millis_mock,
-    .serial = {
-      .bytes_available = bytes_available_mock,
-      .read_byte = read_byte_mock,
-      .send_byte = send_byte_mock
-    },
-  }), SDS011_OK);
+  init_sds011(&sds011);
 
   assert_int_equal(sds011_set_sleep_on(NULL, 0, (sds011_cb_t){NULL, NULL}), SDS011_ERR_INVALID_PARAM);
 
@@ -213,15 +177,7 @@ static void test_set_sleep_off(void **state) {
   (void) state; /* unused */
 
   sds011_t sds011;
-
-  assert_int_equal(sds011_init(&sds011, &(sds011_init_t) {
-    .millis = millis_mock,
-    .serial = {
-      .bytes_available = bytes_available_mock,
-      .read_byte = read_byte_mock,
-      .send_byte = send_byte_mock
-    },
-  }), SDS011_OK);
+  init_sds011(&sds011);
 
   assert_int_equal(sds011_set_sleep_off(NULL, 0, (sds011_cb_t){NULL, NULL}), SDS011_ERR_INVALID_PARAM);
 
@@ -238,15 +194,7 @@ static void test_get_sleep(void **state) {
   (void) state; /* unused */
 
   sds011_t sds011;
-
-  assert_int_equal(sds011_init(&sds011, &(sds011_init_t) {
-    .millis = millis_mock,
-    .serial = {
-      .bytes_available = bytes_available_mock,
-      .read_byte = read_byte_mock,
-      .send_byte = send_byte_mock
-    },
-  }), SDS011_OK);
+  init_sds011(&sds011);
 
   assert_int_equal(sds011_get_sleep(NULL, 0, (sds011_cb_t){NULL, NULL}), SDS011_ERR_INVALID_PARAM);
 
@@ -263,15 +211,7 @@ static void test_set_op_mode_continous(void **state) {
   (void) state; /* unused */
 
   sds011_t sds011;
-
-  assert_int_equal(sds011_init(&sds011, &(sds011_init_t) {
-    .millis = millis_mock,
-    .serial = {
-      .bytes_available = bytes_available_mock,
-      .read_byte = read_byte_mock,
-      .send_byte = send_byte_mock
-    },
-  }), SDS011_OK);
+  init_sds011(&sds011);
 
   assert_int_equal(sds011_set_op_mode_continous(NULL, 0, (sds011_cb_t){NULL, NULL}), SDS011_ERR_INVALID_PARAM);
 
@@ -288,15 +228,7 @@ static void test_set_op_mode_periodic(void **state) {
   (void) state; /* unused */
 
   sds011_t sds011;
-
-  assert_int_equal(sds011_init(&sds011, &(sds011_init_t) {
-    .millis = millis_mock,
-    .serial = {
-      .bytes_available = bytes_available_mock,
-      .read_byte = read_byte_mock,
-      .send_byte = send_byte_mock
-    },
-  }), SDS011_OK);
+  init_sds011(&sds011);
 
   assert_int_equal(sds011_set_op_mode_periodic(NULL, 0, 0, (sds011_cb_t){NULL, NULL}), SDS011_ERR_INVALID_PARAM);
 
@@ -313,15 +245,7 @@ static void test_get_op_mode(void **state) {
   (void) state; /* unused */
 
   sds011_t sds011;
-
-  assert_int_equal(sds011_init(&sds011, &(sds011_init_t) {
-    .millis = millis_mock,
-    .serial = {
-      .bytes_available = bytes_available_mock,
-      .read_byte = read_byte_mock,
-      .send_byte = send_byte_mock
-    },
-  }), SDS011_OK);
+  init_sds011(&sds011);
 
   assert_int_equal(sds011_get_op_mode(NULL, 0, (sds011_cb_t){NULL, NULL}), SDS011_ERR_INVALID_PARAM);
 
@@ -338,15 +262,7 @@ static void test_get_fw_ver(void **state) {
   (void) state; /* unused */
 
   sds011_t sds011;
-
-  assert_int_equal(sds011_init(&sds011, &(sds011_init_t) {
-    .millis = millis_mock,
-    .serial = {
-      .bytes_available = bytes_available_mock,
-      .read_byte = read_byte_mock,
-      .send_byte = send_byte_mock
-    },
-  }), SDS011_OK);
+  init_sds011(&sds011);
 
   assert_int_equal(sds011_get_fw_ver(NULL, 0, (sds011_cb_t){NULL, NULL}), SDS011_ERR_INVALID_PARAM);
 
@@ -376,15 +292,7 @@ static void test_validate_set_result(void **state) {
   // send interval value 1 but receive interval value 2
 
   sds011_t sds011;
-
-  assert_int_equal(sds011_init(&sds011, &(sds011_init_t) {
-    .millis = millis_mock,
-    .serial = {
-      .bytes_available  = bytes_available_mock,
-      .read_byte        = read_byte_mock,
-      .send_byte        = send_byte_mock
-    },
-  }), SDS011_OK);
+  init_sds011(&sds011);
 
   assert_int_equal(sds011_set_op_mode_periodic(&sds011, 0xA160, 1, (sds011_cb_t) {
     .callback = cmd_callback,
@@ -410,6 +318,41 @@ static void test_validate_set_result(void **state) {
   assert_int_not_equal(_cmd_cb_err, SDS011_OK);
 }
 
+static void test_dev_id_ffff_is_accepted(void **state) {
+  (void) state;
+
+  // send request with 0xFFFF id, reply with 0xA160. Callback should be executed.
+
+  sds011_t sds011;
+  init_sds011(&sds011);
+
+  // Build reply
+  size_t size = sds011_builder_build(&(sds011_msg_t) {
+    .dev_id                 = 0xA160,
+    .type                   = SDS011_MSG_TYPE_OP_MODE,
+    .op                     = SDS011_MSG_OP_SET,
+    .src                    = SDS011_MSG_SRC_SENSOR,
+    .data.op_mode.mode      = SDS011_OP_MODE_INTERVAL,
+    .data.op_mode.interval  = 1,
+  }, read_byte_buffer, sizeof(read_byte_buffer));
+  assert_true(size > 0);
+
+  // send request
+  assert_int_equal(sds011_set_op_mode_periodic(&sds011, 0xFFFF, 1, (sds011_cb_t) {
+    .callback = cmd_callback,
+    .user_data = NULL,
+  }), SDS011_OK);
+
+  // Process
+  read_byte_iter = 0;
+  _cmd_cb_call_cnt = 0;
+  _bytes_available = size;
+
+  assert_int_equal(sds011_process(&sds011), SDS011_OK);
+  assert_int_equal(_cmd_cb_call_cnt, 1);
+  assert_int_equal(_cmd_cb_err, SDS011_OK);
+}
+
 int tests_sds011(void) {
   const struct CMUnitTest tests[] = {
     cmocka_unit_test(test_init),
@@ -425,7 +368,8 @@ int tests_sds011(void) {
     cmocka_unit_test(test_set_op_mode_periodic),
     cmocka_unit_test(test_get_op_mode),
     cmocka_unit_test(test_get_fw_ver),
-    cmocka_unit_test(test_validate_set_result)
+    cmocka_unit_test(test_validate_set_result),
+    cmocka_unit_test(test_dev_id_ffff_is_accepted),
   };
   return cmocka_run_group_tests(tests, NULL, NULL);
 }
