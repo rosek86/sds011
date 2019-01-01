@@ -20,7 +20,9 @@ More information can be found in the `examples/example.c` file.
 ## Main features
 
 - Can support multipe sensors connected to the same port (with RS485), or multiple sensors connected to multiple ports.
-- Fully asynchronous, callback based communication.
+- Fully asynchronous, callback based api.
+- Retransmissions in case of failure or timeout.
+- Messages queue.
 - Easily portable to new targets.
 
 ## Dependencies
