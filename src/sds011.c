@@ -276,23 +276,23 @@ static sds011_err_t send_msg(sds011_t *self, sds011_msg_t const *msg, sds011_cb_
     return sds011_builder_get_error();
   }
 
-  if (send_buffer(self, buffer, bytes) == false) {
-    return SDS011_ERR_SEND_DATA;
-  }
-
   self->req.cb         = cb;
   self->req.msg        = *msg;
   self->req.start_time = self->cfg.millis();
+
+  if (send_buffer(self, buffer, bytes) == false) {
+    self->req.cb.callback = NULL;
+    self->req.cb.user_data = NULL;
+    return SDS011_ERR_SEND_DATA;
+  }
 
   return SDS011_OK;
 }
 
 static bool send_buffer(sds011_t *self, uint8_t *buf, size_t size) {
-  uint32_t beg = self->cfg.millis();
-
   for (size_t i = 0; i < size; i++) {
     while (self->cfg.serial.send_byte(buf[i], self->cfg.serial.user_data) == false) {
-      if (is_timeout(self, beg, self->cfg.msg_send_timeout)) {
+      if (is_timeout(self, self->req.start_time, self->cfg.msg_timeout)) {
         return false;
       }
     }

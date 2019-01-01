@@ -16,7 +16,6 @@ extern "C" {
 
 typedef struct {
   uint32_t msg_timeout;
-  uint32_t msg_send_timeout;
 
   uint32_t (*millis)(void);
 

@@ -41,7 +41,6 @@ int main(void) {
 
   err_code = sds011_init(&sds011, &(sds011_init_t) {
     .msg_timeout      = 2000, // set reply timeout to 2s
-    .msg_send_timeout = 500,  // set send timeout to 0.5 s
     .millis           = mock_millis,
     .serial = {
       .bytes_available  = mock_bytes_available,

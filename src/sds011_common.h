@@ -111,6 +111,7 @@ typedef struct {
 
 typedef struct {
   uint16_t          dev_id;
+
   sds011_msg_type_t type;
   sds011_msg_op_t   op;
   sds011_msg_src_t  src;
