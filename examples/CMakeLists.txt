@@ -9,6 +9,7 @@ add_executable(parser_example
 )
 
 add_executable(example
+  ../src/sds011_fifo.c
   ../src/sds011_parser.c
   ../src/sds011_builder.c
   ../src/sds011_validator.c

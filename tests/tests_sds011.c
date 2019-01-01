@@ -81,6 +81,7 @@ static void test_query_data(void **state) {
 
   send_byte_iter = 0;
   assert_int_equal(sds011_query_data(&sds011, 0xFFFF, (sds011_cb_t){NULL, NULL}), SDS011_OK);
+  assert_int_equal(sds011_process(&sds011), SDS011_OK);
   uint8_t ref[] = {
     0xAA, 0xB4, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0x02, 0xAB
@@ -98,6 +99,7 @@ static void test_set_dev_id(void **state) {
 
   send_byte_iter = 0;
   assert_int_equal(sds011_set_device_id(&sds011, 0xA160, 0xA001, (sds011_cb_t){NULL, NULL}), SDS011_OK);
+  assert_int_equal(sds011_process(&sds011), SDS011_OK);
   uint8_t ref[] = {
     0xAA, 0xB4, 0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0xA0, 0x01, 0xA1, 0x60, 0xA7, 0xAB
@@ -115,6 +117,7 @@ static void test_set_reporting_active(void **state) {
 
   send_byte_iter = 0;
   assert_int_equal(sds011_set_reporting_mode_active(&sds011, 0xA160, (sds011_cb_t){NULL, NULL}), SDS011_OK);
+  assert_int_equal(sds011_process(&sds011), SDS011_OK);
   uint8_t ref[] = {
     0xAA, 0xB4, 0x02, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xA1, 0x60, 0x04, 0xAB
@@ -132,6 +135,7 @@ static void test_set_reporting_query(void **state) {
 
   send_byte_iter = 0;
   assert_int_equal(sds011_set_reporting_mode_query(&sds011, 0xA160, (sds011_cb_t){NULL, NULL}), SDS011_OK);
+  assert_int_equal(sds011_process(&sds011), SDS011_OK);
   uint8_t ref[] = {
     0xAA, 0xB4, 0x02, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xA1, 0x60, 0x05, 0xAB
@@ -149,6 +153,7 @@ static void test_get_reporting(void **state) {
 
   send_byte_iter = 0;
   assert_int_equal(sds011_get_reporting_mode(&sds011, 0xFFFF, (sds011_cb_t){NULL, NULL}), SDS011_OK);
+  assert_int_equal(sds011_process(&sds011), SDS011_OK);
   uint8_t ref[] = {
     0xAA, 0xB4, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0xAB
@@ -166,6 +171,7 @@ static void test_set_sleep_on(void **state) {
 
   send_byte_iter = 0;
   assert_int_equal(sds011_set_sleep_on(&sds011, 0xA160, (sds011_cb_t){NULL, NULL}), SDS011_OK);
+  assert_int_equal(sds011_process(&sds011), SDS011_OK);
   uint8_t ref[] = {
     0xAA, 0xB4, 0x06, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xA1, 0x60, 0x08, 0xAB
@@ -183,6 +189,7 @@ static void test_set_sleep_off(void **state) {
 
   send_byte_iter = 0;
   assert_int_equal(sds011_set_sleep_off(&sds011, 0xA160, (sds011_cb_t){NULL, NULL}), SDS011_OK);
+  assert_int_equal(sds011_process(&sds011), SDS011_OK);
   uint8_t ref[] = {
     0xAA, 0xB4, 0x06, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xA1, 0x60, 0x09, 0xAB
@@ -200,6 +207,7 @@ static void test_get_sleep(void **state) {
 
   send_byte_iter = 0;
   assert_int_equal(sds011_get_sleep(&sds011, 0xA160, (sds011_cb_t){NULL, NULL}), SDS011_OK);
+  assert_int_equal(sds011_process(&sds011), SDS011_OK);
   uint8_t ref[] = {
     0xAA, 0xB4, 0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xA1, 0x60, 0x07, 0xAB
@@ -217,6 +225,7 @@ static void test_set_op_mode_continous(void **state) {
 
   send_byte_iter = 0;
   assert_int_equal(sds011_set_op_mode_continous(&sds011, 0xA160, (sds011_cb_t){NULL, NULL}), SDS011_OK);
+  assert_int_equal(sds011_process(&sds011), SDS011_OK);
   uint8_t ref[] = {
     0xAA, 0xB4, 0x08, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xA1, 0x60, 0x0A, 0xAB
@@ -234,6 +243,7 @@ static void test_set_op_mode_periodic(void **state) {
 
   send_byte_iter = 0;
   assert_int_equal(sds011_set_op_mode_periodic(&sds011, 0xA160, 1, (sds011_cb_t){NULL, NULL}), SDS011_OK);
+  assert_int_equal(sds011_process(&sds011), SDS011_OK);
   uint8_t ref[] = {
     0xAA, 0xB4, 0x08, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xA1, 0x60, 0x0B, 0xAB
@@ -251,6 +261,7 @@ static void test_get_op_mode(void **state) {
 
   send_byte_iter = 0;
   assert_int_equal(sds011_get_op_mode(&sds011, 0xA160, (sds011_cb_t){NULL, NULL}), SDS011_OK);
+  assert_int_equal(sds011_process(&sds011), SDS011_OK);
   uint8_t ref[] = {
     0xAA, 0xB4, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xA1, 0x60, 0x09, 0xAB
@@ -268,6 +279,7 @@ static void test_get_fw_ver(void **state) {
 
   send_byte_iter = 0;
   assert_int_equal(sds011_get_fw_ver(&sds011, 0xA160, (sds011_cb_t){NULL, NULL}), SDS011_OK);
+  assert_int_equal(sds011_process(&sds011), SDS011_OK);
   uint8_t ref[] = {
     0xAA, 0xB4, 0x07, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xA1, 0x60, 0x08, 0xAB
@@ -292,7 +304,15 @@ static void test_validate_set_result(void **state) {
   // send interval value 1 but receive interval value 2
 
   sds011_t sds011;
-  init_sds011(&sds011);
+  assert_int_equal(sds011_init(&sds011, &(sds011_init_t) {
+    .retries = 2,
+    .millis = millis_mock,
+    .serial = {
+      .bytes_available  = bytes_available_mock,
+      .read_byte        = read_byte_mock,
+      .send_byte        = send_byte_mock
+    },
+  }), SDS011_OK);
 
   assert_int_equal(sds011_set_op_mode_periodic(&sds011, 0xA160, 1, (sds011_cb_t) {
     .callback = cmd_callback,
@@ -308,6 +328,14 @@ static void test_validate_set_result(void **state) {
     .data.op_mode.interval  = 2,
   }, read_byte_buffer, sizeof(read_byte_buffer));
   assert_true(size > 0);
+  assert_int_equal(sds011_process(&sds011), SDS011_OK); // first send
+
+  read_byte_iter = 0;
+  _cmd_cb_call_cnt = 0;
+  _bytes_available = size;
+
+  assert_int_equal(sds011_process(&sds011), SDS011_OK); // second send
+  assert_int_equal(_cmd_cb_call_cnt, 0);
 
   read_byte_iter = 0;
   _cmd_cb_call_cnt = 0;
@@ -342,6 +370,7 @@ static void test_dev_id_ffff_is_accepted(void **state) {
     .callback = cmd_callback,
     .user_data = NULL,
   }), SDS011_OK);
+  assert_int_equal(sds011_process(&sds011), SDS011_OK);
 
   // Process
   read_byte_iter = 0;

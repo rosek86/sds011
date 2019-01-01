@@ -59,7 +59,3 @@ cmake ..
 make
 ./tests
 ```
-
-## TODO
-
-- requests retry (in case of timeout or invalid response)

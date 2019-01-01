@@ -27,11 +27,11 @@ static void test_builder_params(void **state) {
 
   // size (reply)
   msg = (sds011_msg_t) {
-    .dev_id               = 0x1234,
-    .type                 = SDS011_MSG_TYPE_REP_MODE,
-    .op                   = SDS011_MSG_OP_GET,
-    .src                  = SDS011_MSG_SRC_SENSOR,
-    .data.rep_mode.value  = SDS011_REP_MODE_ACTIVE,
+    .dev_id        = 0x1234,
+    .type          = SDS011_MSG_TYPE_REP_MODE,
+    .op            = SDS011_MSG_OP_GET,
+    .src           = SDS011_MSG_SRC_SENSOR,
+    .data.rep_mode = SDS011_REP_MODE_ACTIVE,
   };
 
   assert_int_equal(sds011_builder_build(&msg, buffer, 9), 0);
@@ -59,11 +59,11 @@ static void test_builder_rep_mode_get(void **state) {
 
   // sensor
   assert_true(sds011_builder_build(&(sds011_msg_t) {
-    .dev_id               = 0xA160,
-    .type                 = SDS011_MSG_TYPE_REP_MODE,
-    .op                   = SDS011_MSG_OP_GET,
-    .src                  = SDS011_MSG_SRC_SENSOR,
-    .data.rep_mode.value  = SDS011_REP_MODE_ACTIVE,
+    .dev_id        = 0xA160,
+    .type          = SDS011_MSG_TYPE_REP_MODE,
+    .op            = SDS011_MSG_OP_GET,
+    .src           = SDS011_MSG_SRC_SENSOR,
+    .data.rep_mode = SDS011_REP_MODE_ACTIVE,
   }, buffer, sizeof(buffer)));
   uint8_t ref2[] = {
     0xAA, 0xC5, 0x02, 0x00, 0x00, 0x00, 0xA1, 0x60, 0x03, 0xAB
@@ -71,11 +71,11 @@ static void test_builder_rep_mode_get(void **state) {
   assert_memory_equal(buffer, ref2, SDS011_REPLY_PACKET_SIZE);
 
   assert_true(sds011_builder_build(&(sds011_msg_t) {
-    .dev_id               = 0xA160,
-    .type                 = SDS011_MSG_TYPE_REP_MODE,
-    .op                   = SDS011_MSG_OP_GET,
-    .src                  = SDS011_MSG_SRC_SENSOR,
-    .data.rep_mode.value  = SDS011_REP_MODE_QUERY,
+    .dev_id        = 0xA160,
+    .type          = SDS011_MSG_TYPE_REP_MODE,
+    .op            = SDS011_MSG_OP_GET,
+    .src           = SDS011_MSG_SRC_SENSOR,
+    .data.rep_mode = SDS011_REP_MODE_QUERY,
   }, buffer, sizeof(buffer)));
   uint8_t ref3[] = {
     0xAA, 0xC5, 0x02, 0x00, 0x01, 0x00, 0xA1, 0x60, 0x04, 0xAB
@@ -90,11 +90,11 @@ static void test_builder_rep_mode_set(void **state) {
 
   // host
   assert_true(sds011_builder_build(&(sds011_msg_t) {
-    .dev_id               = 0xA160,
-    .type                 = SDS011_MSG_TYPE_REP_MODE,
-    .op                   = SDS011_MSG_OP_SET,
-    .src                  = SDS011_MSG_SRC_HOST,
-    .data.rep_mode.value  = SDS011_REP_MODE_QUERY,
+    .dev_id        = 0xA160,
+    .type          = SDS011_MSG_TYPE_REP_MODE,
+    .op            = SDS011_MSG_OP_SET,
+    .src           = SDS011_MSG_SRC_HOST,
+    .data.rep_mode = SDS011_REP_MODE_QUERY,
   }, buffer, sizeof(buffer)));
   uint8_t ref1[] = {
     0xAA, 0xB4, 0x02, 0x01, 0x01, 0x00, 0x00, 0x00,
@@ -105,11 +105,11 @@ static void test_builder_rep_mode_set(void **state) {
 
   // sensor
   assert_true(sds011_builder_build(&(sds011_msg_t) {
-    .dev_id               = 0xA160,
-    .type                 = SDS011_MSG_TYPE_REP_MODE,
-    .op                   = SDS011_MSG_OP_SET,
-    .src                  = SDS011_MSG_SRC_SENSOR,
-    .data.rep_mode.value  = SDS011_REP_MODE_QUERY,
+    .dev_id        = 0xA160,
+    .type          = SDS011_MSG_TYPE_REP_MODE,
+    .op            = SDS011_MSG_OP_SET,
+    .src           = SDS011_MSG_SRC_SENSOR,
+    .data.rep_mode = SDS011_REP_MODE_QUERY,
   }, buffer, sizeof(buffer)));
   uint8_t ref2[] = {
     0xAA, 0xC5, 0x02, 0x01, 0x01, 0x00, 0xA1, 0x60, 0x05, 0xAB
@@ -158,11 +158,11 @@ static void test_builder_dev_id_set(void **state) {
 
   // host
   assert_true(sds011_builder_build(&(sds011_msg_t) {
-    .dev_id               = 0xA160,
-    .type                 = SDS011_MSG_TYPE_DEV_ID,
-    .op                   = SDS011_MSG_OP_SET,
-    .src                  = SDS011_MSG_SRC_HOST,
-    .data.dev_id.new_id   = 0xA001,
+    .dev_id          = 0xA160,
+    .type            = SDS011_MSG_TYPE_DEV_ID,
+    .op              = SDS011_MSG_OP_SET,
+    .src             = SDS011_MSG_SRC_HOST,
+    .data.new_dev_id = 0xA001,
   }, buffer, sizeof(buffer)));
   uint8_t ref1[] = {
     0xAA, 0xB4, 0x05, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -191,11 +191,11 @@ static void test_builder_sleep_set_on(void **state) {
 
   // host
   assert_true(sds011_builder_build(&(sds011_msg_t) {
-    .dev_id           = 0xA160,
-    .type             = SDS011_MSG_TYPE_SLEEP,
-    .op               = SDS011_MSG_OP_SET,
-    .src              = SDS011_MSG_SRC_HOST,
-    .data.sleep.value = SDS011_SLEEP_ON
+    .dev_id     = 0xA160,
+    .type       = SDS011_MSG_TYPE_SLEEP,
+    .op         = SDS011_MSG_OP_SET,
+    .src        = SDS011_MSG_SRC_HOST,
+    .data.sleep = SDS011_SLEEP_ON
   }, buffer, sizeof(buffer)));
   uint8_t ref1[] = {
     0xAA, 0xB4, 0x06, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -205,11 +205,11 @@ static void test_builder_sleep_set_on(void **state) {
 
   // sensor
   assert_true(sds011_builder_build(&(sds011_msg_t) {
-    .dev_id           = 0xA160,
-    .type             = SDS011_MSG_TYPE_SLEEP,
-    .op               = SDS011_MSG_OP_SET,
-    .src              = SDS011_MSG_SRC_SENSOR,
-    .data.sleep.value = SDS011_SLEEP_ON,
+    .dev_id     = 0xA160,
+    .type       = SDS011_MSG_TYPE_SLEEP,
+    .op         = SDS011_MSG_OP_SET,
+    .src        = SDS011_MSG_SRC_SENSOR,
+    .data.sleep = SDS011_SLEEP_ON,
   }, buffer, sizeof(buffer)));
   uint8_t ref2[] = {
     0xAA, 0xC5, 0x06, 0x01, 0x00, 0x00, 0xA1, 0x60, 0x08, 0xAB
@@ -224,11 +224,11 @@ static void test_builder_sleep_set_off(void **state) {
 
   // host
   assert_true(sds011_builder_build(&(sds011_msg_t) {
-    .dev_id           = 0xA160,
-    .type             = SDS011_MSG_TYPE_SLEEP,
-    .op               = SDS011_MSG_OP_SET,
-    .src              = SDS011_MSG_SRC_HOST,
-    .data.sleep.value = SDS011_SLEEP_OFF
+    .dev_id     = 0xA160,
+    .type       = SDS011_MSG_TYPE_SLEEP,
+    .op         = SDS011_MSG_OP_SET,
+    .src        = SDS011_MSG_SRC_HOST,
+    .data.sleep = SDS011_SLEEP_OFF
   }, buffer, sizeof(buffer)));
   uint8_t ref1[] = {
     0xAA, 0xB4, 0x06, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00,
@@ -238,11 +238,11 @@ static void test_builder_sleep_set_off(void **state) {
 
   // sensor
   assert_true(sds011_builder_build(&(sds011_msg_t) {
-    .dev_id           = 0xA160,
-    .type             = SDS011_MSG_TYPE_SLEEP,
-    .op               = SDS011_MSG_OP_SET,
-    .src              = SDS011_MSG_SRC_SENSOR,
-    .data.sleep.value = SDS011_SLEEP_OFF,
+    .dev_id     = 0xA160,
+    .type       = SDS011_MSG_TYPE_SLEEP,
+    .op         = SDS011_MSG_OP_SET,
+    .src        = SDS011_MSG_SRC_SENSOR,
+    .data.sleep = SDS011_SLEEP_OFF,
   }, buffer, sizeof(buffer)));
   uint8_t ref2[] = {
     0xAA, 0xC5, 0x06, 0x01, 0x01, 0x00, 0xA1, 0x60, 0x09, 0xAB
@@ -270,11 +270,11 @@ static void test_builder_sleep_get(void **state) {
 
   // sensor
   assert_true(sds011_builder_build(&(sds011_msg_t) {
-    .dev_id           = 0xA160,
-    .type             = SDS011_MSG_TYPE_SLEEP,
-    .op               = SDS011_MSG_OP_GET,
-    .src              = SDS011_MSG_SRC_SENSOR,
-    .data.sleep.value = SDS011_SLEEP_OFF
+    .dev_id     = 0xA160,
+    .type       = SDS011_MSG_TYPE_SLEEP,
+    .op         = SDS011_MSG_OP_GET,
+    .src        = SDS011_MSG_SRC_SENSOR,
+    .data.sleep = SDS011_SLEEP_OFF
   }, buffer, sizeof(buffer)));
   uint8_t ref2[] = {
     0xAA, 0xC5, 0x06, 0x00, 0x01, 0x00, 0xA1, 0x60, 0x08, 0xAB
@@ -282,11 +282,11 @@ static void test_builder_sleep_get(void **state) {
   assert_memory_equal(buffer, ref2, SDS011_REPLY_PACKET_SIZE);
 
   assert_true(sds011_builder_build(&(sds011_msg_t) {
-    .dev_id           = 0xA160,
-    .type             = SDS011_MSG_TYPE_SLEEP,
-    .op               = SDS011_MSG_OP_GET,
-    .src              = SDS011_MSG_SRC_SENSOR,
-    .data.sleep.value = SDS011_SLEEP_ON
+    .dev_id     = 0xA160,
+    .type       = SDS011_MSG_TYPE_SLEEP,
+    .op         = SDS011_MSG_OP_GET,
+    .src        = SDS011_MSG_SRC_SENSOR,
+    .data.sleep = SDS011_SLEEP_ON
   }, buffer, sizeof(buffer)));
   uint8_t ref3[] = {
     0xAA, 0xC5, 0x06, 0x00, 0x00, 0x00, 0xA1, 0x60, 0x07, 0xAB

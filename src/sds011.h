@@ -5,10 +5,12 @@
 #include <stdbool.h>
 #include <string.h>
 
+#include "sds011_config.h"
 #include "sds011_common.h"
 #include "sds011_parser.h"
 #include "sds011_builder.h"
 #include "sds011_validator.h"
+#include "sds011_fifo.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -16,6 +18,7 @@ extern "C" {
 
 typedef struct {
   uint32_t msg_timeout;
+  uint32_t retries;
 
   uint32_t (*millis)(void);
 
@@ -33,21 +36,40 @@ typedef struct {
 } sds011_cb_t;
 
 typedef struct {
-  sds011_msg_t msg;
-  uint32_t start_time;
-  sds011_cb_t cb;
-} sds011_query_req_t;
-
-typedef struct {
   void (*callback)(sds011_msg_t const *, void *);
   void *user_data;
 } sds011_on_sample_t;
 
 typedef struct {
+  sds011_msg_t msg;
+  sds011_cb_t cb;
+} sds011_request_t;
+
+typedef enum {
+  SDS011_REQ_STATUS_IDLE,
+  SDS011_REQ_STATUS_RUNNING,
+  SDS011_REQ_STATUS_SUCCESS,
+  SDS011_REQ_STATUS_FAILURE,
+} sds011_req_status_t;
+
+typedef struct {
+  sds011_request_t mem[SDS011_REQ_QUEUE_SIZE];
+  sds011_fifo_t queue;
+
+  sds011_request_t active;
+  sds011_req_status_t status;
+  bool critical;
+  uint32_t retry;
+  uint32_t start_time;
+  sds011_msg_t msg;
+  sds011_err_t err;
+} sds011_requests_t;
+
+typedef struct {
   sds011_init_t cfg;
   sds011_parser_t parser;
-  sds011_query_req_t req;
   sds011_on_sample_t on_sample;
+  sds011_requests_t req;
 } sds011_t;
 
 /**

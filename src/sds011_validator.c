@@ -37,21 +37,21 @@ bool sds011_validator_validate(sds011_msg_t const *req, sds011_msg_t const *res)
 }
 
 static bool validate_rep_mode(sds011_msg_t const *req, sds011_msg_t const *res) {
-  if (req->data.rep_mode.value != res->data.rep_mode.value) {
+  if (req->data.rep_mode != res->data.rep_mode) {
     return false;
   }
   return true;
 }
 
 static bool validate_dev_id(sds011_msg_t const *req, sds011_msg_t const *res) {
-  if (req->data.dev_id.new_id != res->dev_id) {
+  if (req->data.new_dev_id != res->dev_id) {
     return false;
   }
   return true;
 }
 
 static bool validate_sleep(sds011_msg_t const *req, sds011_msg_t const *res) {
-  if (req->data.sleep.value != res->data.sleep.value) {
+  if (req->data.sleep != res->data.sleep) {
     return false;
   }
   return true;

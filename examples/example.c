@@ -40,8 +40,9 @@ int main(void) {
   sds011_t sds011;
 
   err_code = sds011_init(&sds011, &(sds011_init_t) {
-    .msg_timeout      = 2000, // set reply timeout to 2s
-    .millis           = mock_millis,
+    .retries      = 2,
+    .msg_timeout  = 2000, // set reply timeout to 2s
+    .millis       = mock_millis,
     .serial = {
       .bytes_available  = mock_bytes_available,
       .read_byte        = mock_read_byte,
@@ -101,11 +102,11 @@ int main(void) {
 
 // Mock implementation
 // These function should be implemented for the target device
-static uint32_t _serial_buffer_iter = 0;
 static uint8_t _serial_buffer[] = {
   0xAA, 0xC0, 0xD4, 0x04, 0x3A, 0x0A, 0xA1, 0x60, 0x1D, 0xAB,
   0xAA, 0xC5, 0x07, 0x0F, 0x07, 0x0A, 0xA1, 0x60, 0x28, 0xAB
 };
+static uint32_t _serial_buffer_iter = sizeof(_serial_buffer);
 
 static uint32_t mock_millis(void) {
   // This function returns number of milliseconds since the
@@ -128,5 +129,6 @@ static uint8_t mock_read_byte(void *user_data) {
 static bool mock_send_byte(uint8_t byte, void *user_data) {
   // This function will send data via serial interface
   // and return true on success, false otherwise.
+  _serial_buffer_iter = 0; // NOTE: reply available after send
   return true;
 }

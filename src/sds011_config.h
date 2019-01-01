@@ -1,0 +1,6 @@
+#ifndef SDS011_CONFIG_H__
+#define SDS011_CONFIG_H__
+
+#define SDS011_REQ_QUEUE_SIZE 10
+
+#endif // SDS011_CONFIG_H__

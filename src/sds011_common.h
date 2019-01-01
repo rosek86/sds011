@@ -117,12 +117,16 @@ typedef struct {
   sds011_msg_src_t  src;
 
   union {
-    sds011_msg_rep_mode_t rep_mode;
     sds011_msg_sample_t   sample;
-    sds011_msg_dev_id_t   dev_id;
-    sds011_msg_sleep_t    sleep;
     sds011_msg_fw_ver_t   fw_ver;
     sds011_msg_op_mode_t  op_mode;
+    uint16_t              new_dev_id;
+    uint8_t               sleep;
+    uint8_t               rep_mode;
+
+    // sds011_msg_dev_id_t   dev_id;
+    // sds011_msg_sleep_t    sleep;
+    // sds011_msg_rep_mode_t rep_mode;
   } data;
 } sds011_msg_t;
 
