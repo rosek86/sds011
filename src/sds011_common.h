@@ -123,10 +123,6 @@ typedef struct {
     uint16_t              new_dev_id;
     uint8_t               sleep;
     uint8_t               rep_mode;
-
-    // sds011_msg_dev_id_t   dev_id;
-    // sds011_msg_sleep_t    sleep;
-    // sds011_msg_rep_mode_t rep_mode;
   } data;
 } sds011_msg_t;
 
