@@ -79,35 +79,25 @@ typedef enum {
 typedef enum {
   SDS011_OP_MODE_CONTINOUS,
   SDS011_OP_MODE_INTERVAL
-} sds011_op_mode_t;
-
-typedef struct {
-  uint8_t value;
-} sds011_msg_rep_mode_t;
+} sds011_op_mode_type_t;
 
 typedef struct {
   uint16_t pm2_5;
   uint16_t pm10;
-} sds011_msg_sample_t;
+} sds011_sample_t;
 
 typedef struct {
-  uint16_t new_id;
-} sds011_msg_dev_id_t;
-
-typedef struct {
-  uint8_t value;
-} sds011_msg_sleep_t;
-
-typedef struct {
-  uint8_t mode;
+  sds011_op_mode_type_t mode;
   uint8_t interval;
-} sds011_msg_op_mode_t;
+} sds011_op_mode_t;
 
 typedef struct {
   uint8_t year;
   uint8_t month;
   uint8_t day;
-} sds011_msg_fw_ver_t;
+} sds011_fw_ver_t;
+
+typedef uint16_t sds011_dev_id_t;
 
 typedef struct {
   uint16_t          dev_id;
@@ -117,12 +107,12 @@ typedef struct {
   sds011_msg_src_t  src;
 
   union {
-    sds011_msg_sample_t   sample;
-    sds011_msg_fw_ver_t   fw_ver;
-    sds011_msg_op_mode_t  op_mode;
-    uint16_t              new_dev_id;
-    uint8_t               sleep;
-    uint8_t               rep_mode;
+    sds011_rep_mode_t rep_mode;
+    sds011_sample_t   sample;
+    sds011_dev_id_t   new_dev_id;
+    sds011_sleep_t    sleep;
+    sds011_op_mode_t  op_mode;
+    sds011_fw_ver_t   fw_ver;
   } data;
 } sds011_msg_t;
 
