@@ -382,6 +382,40 @@ static void test_dev_id_ffff_is_accepted(void **state) {
   assert_int_equal(_cmd_cb_err, SDS011_OK);
 }
 
+static void test_queue(void **state) {
+  (void) state;
+
+  // send request with 0xFFFF id, reply with 0xA160. Callback should be executed.
+
+  sds011_t sds011;
+  init_sds011(&sds011);
+
+  // Build reply
+  size_t size = sds011_builder_build(&(sds011_msg_t) {
+    .dev_id                 = 0xA160,
+    .type                   = SDS011_MSG_TYPE_OP_MODE,
+    .op                     = SDS011_MSG_OP_SET,
+    .src                    = SDS011_MSG_SRC_SENSOR,
+    .data.op_mode.mode      = SDS011_OP_MODE_INTERVAL,
+    .data.op_mode.interval  = 1,
+  }, read_byte_buffer, sizeof(read_byte_buffer));
+  assert_true(size > 0);
+
+  // send request
+  _cmd_cb_call_cnt = 0;
+
+  assert_int_equal(sds011_set_op_mode_periodic(&sds011, 0xFFFF, 1, (sds011_cb_t) {
+    .callback = cmd_callback,
+    .user_data = NULL,
+  }), SDS011_OK);
+  assert_int_equal(sds011_set_op_mode_periodic(&sds011, 0xFFFF, 1, (sds011_cb_t) {
+    .callback = cmd_callback,
+    .user_data = NULL,
+  }), SDS011_OK);
+
+  assert_int_equal(_cmd_cb_call_cnt, 0);
+}
+
 int tests_sds011(void) {
   const struct CMUnitTest tests[] = {
     cmocka_unit_test(test_init),
@@ -399,6 +433,7 @@ int tests_sds011(void) {
     cmocka_unit_test(test_get_fw_ver),
     cmocka_unit_test(test_validate_set_result),
     cmocka_unit_test(test_dev_id_ffff_is_accepted),
+    cmocka_unit_test(test_queue),
   };
   return cmocka_run_group_tests(tests, NULL, NULL);
 }
