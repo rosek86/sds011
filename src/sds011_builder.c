@@ -73,6 +73,7 @@ size_t sds011_builder_build(sds011_msg_t const *msg, uint8_t *buf, size_t size) 
 }
 
 static size_t build_sens_rep_mode(sds011_msg_t const *msg, uint8_t *buf, size_t size) {
+  if (size < SDS011_REPLY_PACKET_SIZE) { return 0; }
   uint8_t crc = 0;
   buf[0] = SDS011_FRAME_BEG;
   buf[1] = SDS011_CMD_REPLY;
@@ -87,6 +88,7 @@ static size_t build_sens_rep_mode(sds011_msg_t const *msg, uint8_t *buf, size_t 
 }
 
 static size_t build_host_rep_mode(sds011_msg_t const *msg, uint8_t *buf, size_t size) {
+  if (size < SDS011_QUERY_PACKET_SIZE) { return 0; }
   uint8_t crc = 0;
   buf[0]  = SDS011_FRAME_BEG;
   buf[1]  = SDS011_CMD_QUERY;
@@ -103,6 +105,7 @@ static size_t build_host_rep_mode(sds011_msg_t const *msg, uint8_t *buf, size_t 
 }
 
 static size_t build_sens_sample(sds011_msg_t const *msg, uint8_t *buf, size_t size) {
+  if (size < SDS011_REPLY_PACKET_SIZE) { return 0; }
   uint8_t crc = 0;
   buf[0] = SDS011_FRAME_BEG;
   buf[1] = SDS011_DAT_REPLY;
@@ -118,6 +121,7 @@ static size_t build_sens_sample(sds011_msg_t const *msg, uint8_t *buf, size_t si
 }
 
 static size_t build_host_sample(sds011_msg_t const *msg, uint8_t *buf, size_t size) {
+  if (size < SDS011_QUERY_PACKET_SIZE) { return 0; }
   uint8_t crc = 0;
   buf[0]  = SDS011_FRAME_BEG;
   buf[1]  = SDS011_CMD_QUERY;
@@ -130,6 +134,7 @@ static size_t build_host_sample(sds011_msg_t const *msg, uint8_t *buf, size_t si
 }
 
 static size_t build_sens_dev_id(sds011_msg_t const *msg, uint8_t *buf, size_t size) {
+  if (size < SDS011_REPLY_PACKET_SIZE) { return 0; }
   uint8_t crc = 0;
   buf[0] = SDS011_FRAME_BEG;
   buf[1] = SDS011_CMD_REPLY;
@@ -142,6 +147,7 @@ static size_t build_sens_dev_id(sds011_msg_t const *msg, uint8_t *buf, size_t si
 }
 
 static size_t build_host_dev_id(sds011_msg_t const *msg, uint8_t *buf, size_t size) {
+  if (size < SDS011_QUERY_PACKET_SIZE) { return 0; }
   uint8_t crc = 0;
   buf[0]  = SDS011_FRAME_BEG;
   buf[1]  = SDS011_CMD_QUERY;
@@ -156,6 +162,7 @@ static size_t build_host_dev_id(sds011_msg_t const *msg, uint8_t *buf, size_t si
 }
 
 static size_t build_sens_sleep(sds011_msg_t const *msg, uint8_t *buf, size_t size) {
+  if (size < SDS011_REPLY_PACKET_SIZE) { return 0; }
   uint8_t crc = 0;
   buf[0] = SDS011_FRAME_BEG;
   buf[1] = SDS011_CMD_REPLY;
@@ -170,6 +177,7 @@ static size_t build_sens_sleep(sds011_msg_t const *msg, uint8_t *buf, size_t siz
 }
 
 static size_t build_host_sleep(sds011_msg_t const *msg, uint8_t *buf, size_t size) {
+  if (size < SDS011_QUERY_PACKET_SIZE) { return 0; }
   uint8_t crc = 0;
   buf[0]  = SDS011_FRAME_BEG;
   buf[1]  = SDS011_CMD_QUERY;
@@ -186,6 +194,7 @@ static size_t build_host_sleep(sds011_msg_t const *msg, uint8_t *buf, size_t siz
 }
 
 static size_t build_sens_fw_ver(sds011_msg_t const *msg, uint8_t *buf, size_t size) {
+  if (size < SDS011_REPLY_PACKET_SIZE) { return 0; }
   uint8_t crc = 0;
   buf[0] = SDS011_FRAME_BEG;
   buf[1] = SDS011_CMD_REPLY;
@@ -201,6 +210,7 @@ static size_t build_sens_fw_ver(sds011_msg_t const *msg, uint8_t *buf, size_t si
 }
 
 static size_t build_host_fw_ver(sds011_msg_t const *msg, uint8_t *buf, size_t size) {
+  if (size < SDS011_QUERY_PACKET_SIZE) { return 0; }
   uint8_t crc = 0;
   buf[0]  = SDS011_FRAME_BEG;
   buf[1]  = SDS011_CMD_QUERY;
@@ -213,6 +223,7 @@ static size_t build_host_fw_ver(sds011_msg_t const *msg, uint8_t *buf, size_t si
 }
 
 static size_t build_sens_op_mode(sds011_msg_t const *msg, uint8_t *buf, size_t size) {
+  if (size < SDS011_REPLY_PACKET_SIZE) { return 0; }
   uint8_t crc = 0;
   buf[0] = SDS011_FRAME_BEG;
   buf[1] = SDS011_CMD_REPLY;
@@ -233,6 +244,7 @@ static size_t build_sens_op_mode(sds011_msg_t const *msg, uint8_t *buf, size_t s
 }
 
 static size_t build_host_op_mode(sds011_msg_t const *msg, uint8_t *buf, size_t size) {
+  if (size < SDS011_QUERY_PACKET_SIZE) { return 0; }
   uint8_t crc = 0;
   buf[0] = SDS011_FRAME_BEG;
   buf[1] = SDS011_CMD_QUERY;

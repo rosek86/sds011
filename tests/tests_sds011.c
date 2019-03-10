@@ -12,12 +12,14 @@ static uint32_t millis_mock(void) {
 
 static uint32_t _bytes_available = 0;
 static size_t bytes_available_mock(void *user_data) {
+  (void)user_data;
   return _bytes_available;
 }
 
 static uint32_t read_byte_iter = 0;
 static uint8_t read_byte_buffer[32];
 static uint8_t read_byte_mock(void *user_data) {
+  (void)user_data;
   if (_bytes_available > 0) {
     _bytes_available--;
   }
@@ -30,6 +32,7 @@ static uint8_t read_byte_mock(void *user_data) {
 static uint32_t send_byte_iter = 0;
 static uint8_t send_byte_buffer[32];
 static bool send_byte_mock(uint8_t byte, void *user_data) {
+  (void)user_data;
   if (send_byte_iter < sizeof(send_byte_buffer)) {
     send_byte_buffer[send_byte_iter++] = byte;
   }
@@ -60,6 +63,24 @@ static void test_init(void **state) {
   }), SDS011_ERR_INVALID_PARAM);
   assert_int_equal(sds011_init(&sds011, &(sds011_init_t) {
     .millis = millis_mock,
+    .serial = {
+      .bytes_available = NULL,
+    }
+  }), SDS011_ERR_INVALID_PARAM);
+  assert_int_equal(sds011_init(&sds011, &(sds011_init_t) {
+    .millis = millis_mock,
+    .serial = {
+      .bytes_available = bytes_available_mock,
+      .read_byte = NULL,
+    }
+  }), SDS011_ERR_INVALID_PARAM);
+  assert_int_equal(sds011_init(&sds011, &(sds011_init_t) {
+    .millis = millis_mock,
+    .serial = {
+      .bytes_available = bytes_available_mock,
+      .read_byte = read_byte_mock,
+      .send_byte = NULL
+    }
   }), SDS011_ERR_INVALID_PARAM);
   assert_int_equal(sds011_init(&sds011, &(sds011_init_t) {
     .millis = millis_mock,
@@ -87,6 +108,18 @@ static void test_query_data(void **state) {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0x02, 0xAB
   };
   assert_memory_equal(send_byte_buffer, ref, SDS011_QUERY_PACKET_SIZE);
+}
+
+static void test_max_requests(void **state) {
+  (void) state; /* unused */
+
+  sds011_t sds011;
+  init_sds011(&sds011);
+
+  for (int i = 0; i < SDS011_REQ_QUEUE_SIZE; i++) {
+    assert_int_equal(sds011_query_data(&sds011, 0xFFFF, (sds011_cb_t){NULL, NULL}), SDS011_OK);
+  }
+  assert_int_equal(sds011_query_data(&sds011, 0xFFFF, (sds011_cb_t){NULL, NULL}), SDS011_ERR_BUSY);
 }
 
 static void test_set_dev_id(void **state) {
@@ -420,6 +453,7 @@ int tests_sds011(void) {
   const struct CMUnitTest tests[] = {
     cmocka_unit_test(test_init),
     cmocka_unit_test(test_query_data),
+    cmocka_unit_test(test_max_requests),
     cmocka_unit_test(test_set_dev_id),
     cmocka_unit_test(test_set_reporting_active),
     cmocka_unit_test(test_set_reporting_query),

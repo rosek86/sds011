@@ -19,7 +19,9 @@ static bool (*_validators[SDS011_MSG_TYPE_COUNT])(sds011_msg_t const *req, sds01
 };
 
 bool sds011_validator_validate(sds011_msg_t const *req, sds011_msg_t const *res) {
-  if (req == NULL || res == NULL) { return false; }
+  if (req == NULL || res == NULL) {
+    return false;
+  }
 
   if (req->type != res->type) { return false; }
   if (req->op   != res->op  ) { return false; }

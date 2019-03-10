@@ -16,6 +16,7 @@ static sds011_err_t _cb_err_code;
 static sds011_msg_t _cb_msg;
 
 static void sds011_cb(sds011_err_t err_code, sds011_msg_t const *msg, void *user_data) {
+  (void)user_data;
   _cb_exec = true;
   _cb_err_code = err_code;
 
@@ -29,6 +30,7 @@ static bool _new_sample = false;
 static sds011_msg_t _new_sample_msg;
 
 static void on_sample(sds011_msg_t const *msg, void *user_data) {
+  (void)user_data;
   if (msg) {
     _new_sample = true;
     _new_sample_msg = *msg;
@@ -115,18 +117,22 @@ static uint32_t mock_millis(void) {
 }
 
 static size_t mock_bytes_available(void *user_data) {
+  (void)user_data;
   // This function returns number of bytes
   // in the serial input queue
   return sizeof(_serial_buffer) - _serial_buffer_iter;
 }
 
 static uint8_t mock_read_byte(void *user_data) {
+  (void)user_data;
   // This function retunrs single byte from the
   // serial input queue
   return _serial_buffer[_serial_buffer_iter++];
 }
 
 static bool mock_send_byte(uint8_t byte, void *user_data) {
+  (void)byte;
+  (void)user_data;
   // This function will send data via serial interface
   // and return true on success, false otherwise.
   _serial_buffer_iter = 0; // NOTE: reply available after send

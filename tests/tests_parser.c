@@ -9,7 +9,7 @@
 static sds011_parser_t parser;
 
 static void parse_buffer(uint8_t *buf, size_t size, sds011_msg_t *msg) {
-  for (int i = 0; i < size - 1; i++) {
+  for (size_t i = 0; i < size - 1; i++) {
     sds011_parser_res_t res = sds011_parser_parse(&parser, buf[i]);
     if (res == SDS011_PARSER_RES_ERROR) {
       printf("%d\n", sds011_parser_get_error(&parser));

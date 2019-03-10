@@ -53,7 +53,7 @@ typedef enum {
 } sds011_req_status_t;
 
 typedef struct {
-  sds011_request_t mem[SDS011_REQ_QUEUE_SIZE];
+  sds011_request_t mem[SDS011_REQ_QUEUE_SIZE+1];
   sds011_fifo_t queue;
 
   sds011_request_t active;

@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 project(examples)
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -std=c11")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -std=c11")
 
 add_executable(parser_example
   ../src/sds011_parser.c

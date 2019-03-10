@@ -49,6 +49,7 @@ void test_init_count_calcs(void **state) {
 }
 
 void test_push_params(void **state) {
+  (void)state;
   sds011_fifo_t f, *fifo = &f;
   uint8_t mem[2*sizeof(uint16_t)];
   uint16_t v = 65;
@@ -60,6 +61,7 @@ void test_push_params(void **state) {
 }
 
 void test_pop_params(void **state) {
+  (void)state;
   sds011_fifo_t f, *fifo = &f;
   uint8_t mem[2*sizeof(uint16_t)];
   uint16_t v = 65;

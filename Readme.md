@@ -33,6 +33,7 @@ Ubuntu:
 ```bash
 sudo apt install cmake
 sudo apt install libcmocka-dev
+sudo apt install lcov
 ```
 
 OSX (using brew):
@@ -40,6 +41,7 @@ OSX (using brew):
 ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)" < /dev/null 2> /dev/null
 brew install cmake
 brew install cmocka
+brew install lcov
 ```
 
 ## Build Examples
@@ -60,7 +62,6 @@ cd ./tests/build
 cmake ..
 make
 ./tests
+../coverage.sh
+open ./out/index.html
 ```
-## TODO
-
-- tests coverage
