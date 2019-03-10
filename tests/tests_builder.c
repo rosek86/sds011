@@ -431,6 +431,54 @@ static void test_builder_op_mode_get(void **state) {
   assert_memory_equal(buffer, ref2, SDS011_REPLY_PACKET_SIZE);
 }
 
+static void test_builder_missing(void **state) {
+  (void)state;
+
+  uint8_t buffer[SDS011_REPLY_PACKET_SIZE];
+  assert_int_equal(sds011_builder_build(&(sds011_msg_t) {
+    .dev_id                 = 0xA160,
+    .type                   = 0,
+    .op                     = SDS011_MSG_OP_GET,
+    .src                    = SDS011_MSG_SRC_SENSOR,
+    .data.op_mode.mode      = SDS011_OP_MODE_INTERVAL,
+    .data.op_mode.interval  = 2,
+  }, buffer, sizeof(buffer)), 0);
+
+  assert_int_equal(sds011_builder_get_error(), SDS011_ERR_INVALID_MSG_TYPE);
+}
+
+static void test_builder_invalid_type(void **state) {
+  (void)state;
+
+  uint8_t buffer[SDS011_REPLY_PACKET_SIZE];
+  assert_int_equal(sds011_builder_build(&(sds011_msg_t) {
+    .dev_id                 = 0xA160,
+    .type                   = SDS011_MSG_TYPE_COUNT,
+    .op                     = SDS011_MSG_OP_GET,
+    .src                    = SDS011_MSG_SRC_SENSOR,
+    .data.op_mode.mode      = SDS011_OP_MODE_INTERVAL,
+    .data.op_mode.interval  = 2,
+  }, buffer, sizeof(buffer)), 0);
+
+  assert_int_equal(sds011_builder_get_error(), SDS011_ERR_INVALID_MSG_TYPE);
+}
+
+static void test_builder_invalid_src(void **state) {
+  (void)state;
+
+  uint8_t buffer[SDS011_REPLY_PACKET_SIZE];
+  assert_int_equal(sds011_builder_build(&(sds011_msg_t) {
+    .dev_id                 = 0xA160,
+    .type                   = SDS011_MSG_TYPE_OP_MODE,
+    .op                     = SDS011_MSG_OP_GET,
+    .src                    = 0x7f,
+    .data.op_mode.mode      = SDS011_OP_MODE_INTERVAL,
+    .data.op_mode.interval  = 2,
+  }, buffer, sizeof(buffer)), 0);
+
+  assert_int_equal(sds011_builder_get_error(), SDS011_ERR_INVALID_SRC);
+}
+
 int tests_builder(void) {
   const struct CMUnitTest tests[] = {
     cmocka_unit_test(test_builder_params),
@@ -444,7 +492,10 @@ int tests_builder(void) {
     cmocka_unit_test(test_builder_fw_ver),
     cmocka_unit_test(test_builder_op_mode_set_periodic),
     cmocka_unit_test(test_builder_op_mode_set_continous),
-    cmocka_unit_test(test_builder_op_mode_get)
+    cmocka_unit_test(test_builder_op_mode_get),
+    cmocka_unit_test(test_builder_missing),
+    cmocka_unit_test(test_builder_invalid_type),
+    cmocka_unit_test(test_builder_invalid_src),
   };
   return cmocka_run_group_tests(tests, NULL, NULL);
 }

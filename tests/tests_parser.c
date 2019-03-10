@@ -11,9 +11,6 @@ static sds011_parser_t parser;
 static void parse_buffer(uint8_t *buf, size_t size, sds011_msg_t *msg) {
   for (size_t i = 0; i < size - 1; i++) {
     sds011_parser_res_t res = sds011_parser_parse(&parser, buf[i]);
-    if (res == SDS011_PARSER_RES_ERROR) {
-      printf("%d\n", sds011_parser_get_error(&parser));
-    }
     assert_int_equal(res, SDS011_PARSER_RES_RUNNING);
   }
   assert_int_equal(sds011_parser_parse(&parser, buf[size - 1]), SDS011_PARSER_RES_READY);
@@ -487,6 +484,110 @@ void test_parser_msg_op_mode_get(void **state) {
   assert_int_equal(msg.data.op_mode.interval, 2);
 }
 
+static void test_parser_invalid_state(void **state) {
+  sds011_parser_t parser;
+  parser.state = 16; // > STATE_END
+  assert_int_equal(sds011_parser_parse(&parser, 'a'), SDS011_PARSER_RES_RUNNING);
+  assert_int_equal(parser.state, 0);
+}
+
+static void test_parser_invalid_msg(void **state) {
+  (void)state; // unused
+  sds011_parser_init(&parser);
+
+  // start, cmd, data..., crc, end
+
+  uint8_t buf[] = { 0xAA, 0xC5, 0x09, 0x00, 0x02, 0x00, 0xA1, 0x60, 0x0C, 0xAB };
+  for (size_t i = 0; i < sizeof(buf) - 1; i++) {
+    sds011_parser_res_t res = sds011_parser_parse(&parser, buf[i]);
+    assert_int_equal(res, SDS011_PARSER_RES_RUNNING);
+  }
+  assert_int_equal(sds011_parser_parse(&parser, buf[sizeof(buf) - 1]), SDS011_PARSER_RES_ERROR);
+  assert_int_equal(sds011_parser_get_error(&parser), SDS011_ERR_INVALID_MSG_TYPE);
+
+  buf[2] = 1;
+  buf[8] = 0x0C - 0x08;
+  for (size_t i = 0; i < sizeof(buf) - 1; i++) {
+    sds011_parser_res_t res = sds011_parser_parse(&parser, buf[i]);
+    assert_int_equal(res, SDS011_PARSER_RES_RUNNING);
+  }
+  assert_int_equal(sds011_parser_parse(&parser, buf[sizeof(buf) - 1]), SDS011_PARSER_RES_ERROR);
+  assert_int_equal(sds011_parser_get_error(&parser), SDS011_ERR_INVALID_MSG_TYPE);
+}
+
+static void test_parser_rep_mode_invalid_data(void **state) {
+  (void)state;
+
+  uint8_t buf[] = { 0xAA, 0xC5, 0x02, 0x02, 0x00, 0x00, 0xA1, 0x60, 0x05, 0xAB };
+
+  // invalid op
+  for (size_t i = 0; i < sizeof(buf) - 1; i++) {
+    sds011_parser_res_t res = sds011_parser_parse(&parser, buf[i]);
+    assert_int_equal(res, SDS011_PARSER_RES_RUNNING);
+  }
+  assert_int_equal(sds011_parser_parse(&parser, buf[sizeof(buf) - 1]), SDS011_PARSER_RES_ERROR);
+  assert_int_equal(sds011_parser_get_error(&parser), SDS011_ERR_INVALID_DATA);
+
+  // invalid rep mode
+  buf[3] = 0;
+  buf[4] = 2;
+  for (size_t i = 0; i < sizeof(buf) - 1; i++) {
+    sds011_parser_res_t res = sds011_parser_parse(&parser, buf[i]);
+    assert_int_equal(res, SDS011_PARSER_RES_RUNNING);
+  }
+  assert_int_equal(sds011_parser_parse(&parser, buf[sizeof(buf) - 1]), SDS011_PARSER_RES_ERROR);
+  assert_int_equal(sds011_parser_get_error(&parser), SDS011_ERR_INVALID_DATA);
+}
+
+static void test_parser_sleep_invalid_data(void **state) {
+  (void)state;
+
+  uint8_t buf[] = { 0xAA, 0xC5, 0x06, 0x02, 0x00, 0x00, 0xA1, 0x60, 0x09, 0xAB };
+
+  // invalid op
+  for (size_t i = 0; i < sizeof(buf) - 1; i++) {
+    sds011_parser_res_t res = sds011_parser_parse(&parser, buf[i]);
+    assert_int_equal(res, SDS011_PARSER_RES_RUNNING);
+  }
+  assert_int_equal(sds011_parser_parse(&parser, buf[sizeof(buf) - 1]), SDS011_PARSER_RES_ERROR);
+  assert_int_equal(sds011_parser_get_error(&parser), SDS011_ERR_INVALID_DATA);
+
+  // invalid rep mode
+  buf[3] = 0;
+  buf[4] = 2;
+  for (size_t i = 0; i < sizeof(buf) - 1; i++) {
+    sds011_parser_res_t res = sds011_parser_parse(&parser, buf[i]);
+    assert_int_equal(res, SDS011_PARSER_RES_RUNNING);
+  }
+  assert_int_equal(sds011_parser_parse(&parser, buf[sizeof(buf) - 1]), SDS011_PARSER_RES_ERROR);
+  assert_int_equal(sds011_parser_get_error(&parser), SDS011_ERR_INVALID_DATA);
+}
+
+static void test_parser_op_mode_invalid_data(void **state) {
+  (void)state;
+
+  uint8_t buf[] = { 0xAA, 0xC5, 0x08, 0x02, 0x00, 0x00, 0xA1, 0x60, 0x0B, 0xAB };
+
+  // invalid op
+  for (size_t i = 0; i < sizeof(buf) - 1; i++) {
+    sds011_parser_res_t res = sds011_parser_parse(&parser, buf[i]);
+    assert_int_equal(res, SDS011_PARSER_RES_RUNNING);
+  }
+  assert_int_equal(sds011_parser_parse(&parser, buf[sizeof(buf) - 1]), SDS011_PARSER_RES_ERROR);
+  assert_int_equal(sds011_parser_get_error(&parser), SDS011_ERR_INVALID_DATA);
+
+  // invalid rep mode
+  buf[3] = 0;
+  buf[4] = 31;
+  buf[8] = 0x28; // crc
+  for (size_t i = 0; i < sizeof(buf) - 1; i++) {
+    sds011_parser_res_t res = sds011_parser_parse(&parser, buf[i]);
+    assert_int_equal(res, SDS011_PARSER_RES_RUNNING);
+  }
+  assert_int_equal(sds011_parser_parse(&parser, buf[sizeof(buf) - 1]), SDS011_PARSER_RES_ERROR);
+  assert_int_equal(sds011_parser_get_error(&parser), SDS011_ERR_INVALID_DATA);
+}
+
 int tests_parser(void) {
   const struct CMUnitTest tests[] = {
     cmocka_unit_test(test_parser_sync_byte),
@@ -504,6 +605,11 @@ int tests_parser(void) {
     cmocka_unit_test(test_parser_msg_op_mode_set_periodic),
     cmocka_unit_test(test_parser_msg_op_mode_set_continous),
     cmocka_unit_test(test_parser_msg_op_mode_get),
+    cmocka_unit_test(test_parser_invalid_state),
+    cmocka_unit_test(test_parser_invalid_msg),
+    cmocka_unit_test(test_parser_rep_mode_invalid_data),
+    cmocka_unit_test(test_parser_sleep_invalid_data),
+    cmocka_unit_test(test_parser_op_mode_invalid_data),
   };
   return cmocka_run_group_tests(tests, NULL, NULL);
 }

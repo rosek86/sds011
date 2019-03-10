@@ -20,6 +20,7 @@ void test_init_params(void **state) {
   assert_false(sds011_fifo_init(NULL, 0, NULL, 0));
   assert_false(sds011_fifo_init(fifo, 0, NULL, 0));
   assert_false(sds011_fifo_init(fifo, 1, NULL, 0));
+  assert_false(sds011_fifo_init(fifo, 0, mem,  0));
   assert_false(sds011_fifo_init(fifo, 1, mem,  0));
   assert_true (sds011_fifo_init(fifo, 1, mem,  1));
   assert_false(sds011_fifo_init(fifo, 2, mem,  1));

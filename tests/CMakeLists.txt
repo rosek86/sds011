@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8)
 project(tests)
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -std=c11 -g -O0")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLGGS} -fprofile-arcs -ftest-coverage -fno-elide-constructors")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLGGS} -fprofile-arcs -ftest-coverage")
 
 find_library(CMOCKA_LIB cmocka)
 find_path(CMOCKA_INC cmocka.h)
@@ -18,10 +18,13 @@ add_executable(tests
   ./tests.c
 )
 
-add_custom_target(
-  clear-coverage
-  COMMAND find . -name "*gcd[ao]" -exec rm -f {} +
+add_custom_command(TARGET tests
+  POST_BUILD
+  COMMAND lcov --zerocounters --directory . || true
+  COMMAND ./tests
+  COMMAND lcov --capture --directory . --output-file coverage.info --rc lcov_branch_coverage=1
+  COMMAND genhtml coverage.info --output-directory out --rc lcov_branch_coverage=1
+  COMMAND lcov -v
 )
 
-add_dependencies(tests clear-coverage)
 target_link_libraries(tests ${CMOCKA_LIB})

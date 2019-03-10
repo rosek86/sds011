@@ -11,6 +11,7 @@ static void test_validate(void **state) {
 
   // invalid req, res
   assert_int_equal(sds011_validator_validate(NULL, NULL), false);
+  assert_int_equal(sds011_validator_validate(&(sds011_msg_t) {}, NULL), false);
 
   // req.type != res.type
   assert_int_equal(sds011_validator_validate(&(sds011_msg_t) {
