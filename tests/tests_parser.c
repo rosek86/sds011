@@ -485,6 +485,8 @@ void test_parser_msg_op_mode_get(void **state) {
 }
 
 static void test_parser_invalid_state(void **state) {
+  (void)state; // unused
+
   sds011_parser_t parser;
   parser.state = 16; // > STATE_END
   assert_int_equal(sds011_parser_parse(&parser, 'a'), SDS011_PARSER_RES_RUNNING);

@@ -161,13 +161,19 @@ static void test_validate_op_mode(void **state) {
     .type = SDS011_MSG_TYPE_OP_MODE,
     .op   = SDS011_MSG_OP_SET,
     .data = {
-      .op_mode = SDS011_OP_MODE_CONTINOUS,
+      .op_mode = {
+        .mode = SDS011_OP_MODE_CONTINOUS,
+        .interval = 0,
+      },
     }
   }, &(sds011_msg_t) {
     .type = SDS011_MSG_TYPE_OP_MODE,
     .op   = SDS011_MSG_OP_SET,
     .data = {
-      .op_mode = SDS011_OP_MODE_CONTINOUS,
+      .op_mode = {
+        .mode = SDS011_OP_MODE_CONTINOUS,
+        .interval = 0,
+      },
     }
   }), true);
 
@@ -176,13 +182,19 @@ static void test_validate_op_mode(void **state) {
     .type = SDS011_MSG_TYPE_OP_MODE,
     .op   = SDS011_MSG_OP_SET,
     .data = {
-      .op_mode = SDS011_OP_MODE_CONTINOUS,
+      .op_mode = {
+        .mode = SDS011_OP_MODE_CONTINOUS,
+        .interval = 0,
+      }
     }
   }, &(sds011_msg_t) {
     .type = SDS011_MSG_TYPE_OP_MODE,
     .op   = SDS011_MSG_OP_SET,
     .data = {
-      .op_mode = SDS011_OP_MODE_INTERVAL,
+      .op_mode = {
+        .mode = SDS011_OP_MODE_INTERVAL,
+        .interval = 0,
+      }
     }
   }), false);
 }

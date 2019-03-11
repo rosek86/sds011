@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8)
 project(tests)
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -std=c11 -g -O0")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLGGS} -fprofile-arcs -ftest-coverage")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fprofile-arcs -ftest-coverage")
 
 find_library(CMOCKA_LIB cmocka)
 find_path(CMOCKA_INC cmocka.h)

@@ -273,11 +273,11 @@ static void send_active_msg(sds011_t *self) {
 
 static bool send_buffer(sds011_t *self, uint8_t *buf, size_t size) {
   for (size_t i = 0; i < size; i++) {
-    while (self->cfg.serial.send_byte(buf[i], self->cfg.serial.user_data) == false) {
+    do {
       if (is_timeout(self, self->req.start_time, self->cfg.msg_timeout)) {
         return false;
       }
-    }
+    } while (self->cfg.serial.send_byte(buf[i], self->cfg.serial.user_data) == false);
   }
   return true;
 }
