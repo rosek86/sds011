@@ -170,6 +170,32 @@ static void test_set_dev_id(void **state) {
     0x00, 0x00, 0x00, 0x00, 0xA0, 0x01, 0xA1, 0x60, 0xA7, 0xAB
   };
   assert_memory_equal(send_byte_buffer, ref, SDS011_QUERY_PACKET_SIZE);
+
+  _bytes_available = sds011_builder_build(&(sds011_msg_t) {
+    .dev_id           = 0xA001,
+    .type             = SDS011_MSG_TYPE_DEV_ID,
+    .op               = SDS011_MSG_OP_GET,
+    .src              = SDS011_MSG_SRC_SENSOR,
+  }, read_byte_buffer, sizeof(read_byte_buffer));
+
+  read_byte_iter = 0;
+  assert_int_equal(sds011_process(&sds011), SDS011_OK); // first send
+
+  // invalid reply
+  send_byte_iter = 0;
+  _send_bytes_available = sizeof(send_byte_buffer);
+  assert_int_equal(sds011_set_device_id(&sds011, 0xA160, 0xA001, (sds011_cb_t){NULL, NULL}), SDS011_OK);
+  assert_int_equal(sds011_process(&sds011), SDS011_OK);
+
+  _bytes_available = sds011_builder_build(&(sds011_msg_t) {
+    .dev_id           = 0xFFFF, // invalid id
+    .type             = SDS011_MSG_TYPE_DEV_ID,
+    .op               = SDS011_MSG_OP_GET,
+    .src              = SDS011_MSG_SRC_SENSOR,
+  }, read_byte_buffer, sizeof(read_byte_buffer));
+
+  read_byte_iter = 0;
+  assert_int_equal(sds011_process(&sds011), SDS011_OK); // first send
 }
 
 static void test_set_reporting_active(void **state) {
@@ -609,6 +635,14 @@ static void test_send_timeout(void **state) {
   assert_int_equal(sds011_process(&sds011), SDS011_OK); // send
 }
 
+static bool _msg_cb_called = false;
+static void msg_cb(sds011_err_t err, sds011_msg_t const *msg, void *user_data) {
+  (void)err;
+  (void)msg;
+  (void)user_data;
+  _msg_cb_called = true;
+}
+
 static void test_send_invalid_msg(void **state) {
   (void) state; /* unused */
 
@@ -627,9 +661,72 @@ static void test_send_invalid_msg(void **state) {
       .data.op_mode.mode      = SDS011_OP_MODE_INTERVAL,
       .data.op_mode.interval  = 2,
     },
-    .cb = (sds011_cb_t){NULL, NULL},
+    .cb = (sds011_cb_t) {
+      msg_cb, NULL
+    },
   });
   assert_int_equal(sds011_process(&sds011), SDS011_OK);
+
+  _msg_cb_called = false;
+  assert_int_equal(sds011_process(&sds011), SDS011_OK);
+  assert_true(_msg_cb_called);
+}
+
+static void test_other_msg_type_during_request(void **state) {
+  (void) state; /* unused */
+
+  sds011_t sds011;
+  init_sds011(&sds011);
+
+  send_byte_iter = 0;
+  _send_bytes_available = SDS011_QUERY_PACKET_SIZE;
+
+  assert_int_equal(sds011_set_device_id(&sds011, 0xA160, 0xA001, (sds011_cb_t) {
+    msg_cb, NULL
+  }), SDS011_OK);
+  assert_int_equal(sds011_process(&sds011), SDS011_OK);
+
+  _bytes_available = sds011_builder_build(&(sds011_msg_t) {
+    .dev_id     = 0xA001,
+    .type       = SDS011_MSG_TYPE_SLEEP,
+    .op         = SDS011_MSG_OP_GET,
+    .src        = SDS011_MSG_SRC_SENSOR,
+    .data.sleep = SDS011_SLEEP_ON
+  }, read_byte_buffer, sizeof(read_byte_buffer));
+
+  _msg_cb_called = false;
+  read_byte_iter = 0;
+  assert_int_equal(sds011_process(&sds011), SDS011_OK);
+  assert_false(_msg_cb_called);
+}
+
+static void test_other_msg_op_during_request(void **state) {
+  (void)state;
+
+  sds011_t sds011;
+  init_sds011(&sds011);
+
+  send_byte_iter = 0;
+  _send_bytes_available = SDS011_QUERY_PACKET_SIZE;
+
+  // set here
+  assert_int_equal(sds011_set_op_mode_continous(&sds011, 0xFFFF, (sds011_cb_t) {
+    msg_cb, NULL
+  }), SDS011_OK);
+  assert_int_equal(sds011_process(&sds011), SDS011_OK);
+
+  // get here
+  _bytes_available = sds011_builder_build(&(sds011_msg_t) {
+    .dev_id     = 0xA001,
+    .type       = SDS011_MSG_TYPE_OP_MODE,
+    .op         = SDS011_MSG_OP_GET,
+    .src        = SDS011_MSG_SRC_SENSOR,
+  }, read_byte_buffer, sizeof(read_byte_buffer));
+
+  _msg_cb_called = false;
+  read_byte_iter = 0;
+  assert_int_equal(sds011_process(&sds011), SDS011_OK);
+  assert_false(_msg_cb_called);
 }
 
 int tests_sds011(void) {
@@ -658,6 +755,8 @@ int tests_sds011(void) {
     cmocka_unit_test(test_infinite_send_timeout),
     cmocka_unit_test(test_send_timeout),
     cmocka_unit_test(test_send_invalid_msg),
+    cmocka_unit_test(test_other_msg_type_during_request),
+    cmocka_unit_test(test_other_msg_op_during_request),
   };
   return cmocka_run_group_tests(tests, NULL, NULL);
 }
