@@ -61,7 +61,7 @@ mkdir -p ./tests/build
 cd ./tests/build
 cmake ..
 make
-./tests
-../coverage.sh
+make test
+make coverage
 open ./out/index.html
 ```
