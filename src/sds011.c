@@ -1,4 +1,4 @@
-
+/*lint -e537 -e708*/
 #include <stdint.h>
 
 #include "sds011.h"
@@ -34,14 +34,14 @@ sds011_err_t sds011_init(sds011_t *self, sds011_init_t const *init) {
 static bool init_req_queue(sds011_t *self) {
   sds011_requests_t *req = &self->req;
 
-  memset(&req->mem, 0, sizeof(req->mem));
+  memset(req->mem, 0, sizeof(req->mem));
   memset(&req->active, 0, sizeof(req->active));
   req->status = SDS011_REQ_STATUS_IDLE;
   req->critical = false;
   req->retry = 0;
   req->start_time = 0;
 
-  return sds011_fifo_init(&req->queue, sizeof(sds011_request_t), &req->mem, sizeof(req->mem));
+  return sds011_fifo_init(&req->queue, sizeof(sds011_request_t), req->mem, sizeof(req->mem));
 }
 
 sds011_err_t sds011_set_sample_callback(sds011_t *self, sds011_on_sample_t cb) {
@@ -93,7 +93,7 @@ sds011_err_t sds011_set_device_id(sds011_t *self, uint16_t dev_id, uint16_t new_
   }, cb);
 }
 
-sds011_err_t sds011_set_reporting_mode_active(sds011_t *self, uint16_t dev_id, sds011_cb_t cb) {
+sds011_err_t sds011_set_rep_mode_active(sds011_t *self, uint16_t dev_id, sds011_cb_t cb) {
   return push_msg(self, &(sds011_msg_t) {
     .dev_id        = dev_id,
     .type          = SDS011_MSG_TYPE_REP_MODE,
@@ -103,7 +103,7 @@ sds011_err_t sds011_set_reporting_mode_active(sds011_t *self, uint16_t dev_id, s
   }, cb);
 }
 
-sds011_err_t sds011_set_reporting_mode_query(sds011_t *self, uint16_t dev_id, sds011_cb_t cb) {
+sds011_err_t sds011_set_rep_mode_query(sds011_t *self, uint16_t dev_id, sds011_cb_t cb) {
   return push_msg(self, &(sds011_msg_t) {
     .dev_id        = dev_id,
     .type          = SDS011_MSG_TYPE_REP_MODE,
@@ -113,7 +113,7 @@ sds011_err_t sds011_set_reporting_mode_query(sds011_t *self, uint16_t dev_id, sd
   }, cb);
 }
 
-sds011_err_t sds011_get_reporting_mode(sds011_t *self, uint16_t dev_id, sds011_cb_t cb) {
+sds011_err_t sds011_get_rep_mode(sds011_t *self, uint16_t dev_id, sds011_cb_t cb) {
   return push_msg(self, &(sds011_msg_t) {
     .dev_id = dev_id,
     .type   = SDS011_MSG_TYPE_REP_MODE,
@@ -191,7 +191,7 @@ sds011_err_t sds011_get_fw_ver(sds011_t *self, uint16_t dev_id, sds011_cb_t cb) 
   }, cb);
 }
 
-static bool is_timeout(sds011_t *self, uint32_t beg, uint32_t timeout);
+static bool is_timeout(sds011_t const *self, uint32_t beg, uint32_t timeout);
 static void send_active_msg(sds011_t *self);
 static sds011_err_t process_byte(sds011_t *self, uint8_t byte);
 
@@ -239,45 +239,54 @@ sds011_err_t sds011_process(sds011_t *self) {
   return err_code;
 }
 
-static bool is_timeout(sds011_t *self, uint32_t beg, uint32_t timeout) {
+static bool is_timeout(sds011_t const *self, uint32_t beg, uint32_t timeout) {
   if (timeout == 0) {
     return false;
   }
   return (self->cfg.millis() - beg) > timeout;
 }
 
-static bool send_buffer(sds011_t *self, uint8_t *buf, size_t size);
+static bool send_buffer(sds011_t *self, uint8_t const *buf, size_t size);
 
 static void send_active_msg(sds011_t *self) {
   static uint8_t buffer[SDS011_QUERY_PACKET_SIZE];
-  size_t bytes;
-  sds011_msg_t *msg = &self->req.active.msg;
 
   self->req.status = SDS011_REQ_STATUS_RUNNING;
   self->req.critical = false;
   self->req.start_time = self->cfg.millis();
 
+  size_t bytes;
+  sds011_msg_t *msg = &self->req.active.msg;
+
   if ((bytes = sds011_builder_build(msg, buffer, sizeof(buffer))) == 0) {
-    self->req.err = sds011_builder_get_error();
-    self->req.status = SDS011_REQ_STATUS_FAILURE;
+    self->req.err      = sds011_builder_get_error();
+    self->req.status   = SDS011_REQ_STATUS_FAILURE;
+    self->req.critical = true;
+    return;
+  }
+
+  if (bytes > sizeof(buffer)) {
+    self->req.err      = SDS011_ERR_INVALID_DATA;
+    self->req.status   = SDS011_REQ_STATUS_FAILURE;
     self->req.critical = true;
     return;
   }
 
   if (send_buffer(self, buffer, bytes) == false) {
-    self->req.err = SDS011_ERR_SEND_DATA;
+    self->req.err    = SDS011_ERR_SEND_DATA;
     self->req.status = SDS011_REQ_STATUS_FAILURE;
     return;
   }
 }
 
-static bool send_buffer(sds011_t *self, uint8_t *buf, size_t size) {
+static bool send_buffer(sds011_t *self, uint8_t const *buf, size_t size) {
   for (size_t i = 0; i < size; i++) {
+    uint8_t byte = buf[i];
     do {
       if (is_timeout(self, self->req.start_time, self->cfg.msg_timeout)) {
         return false;
       }
-    } while (self->cfg.serial.send_byte(buf[i], self->cfg.serial.user_data) == false);
+    } while (self->cfg.serial.send_byte(byte, self->cfg.serial.user_data) == false);
   }
   return true;
 }
@@ -302,7 +311,7 @@ static sds011_err_t process_byte(sds011_t *self, uint8_t byte) {
   return SDS011_OK;
 }
 
-static bool is_callback_for_msg(sds011_t *self, sds011_msg_t const *msg);
+static bool is_callback_for_msg(sds011_t const *self, sds011_msg_t const *msg);
 
 static void on_message(sds011_t *self, sds011_msg_t const *msg) {
   if (msg->type == SDS011_MSG_TYPE_DATA) {
@@ -324,7 +333,7 @@ static void on_message(sds011_t *self, sds011_msg_t const *msg) {
   }
 }
 
-static bool is_callback_for_msg(sds011_t *self, sds011_msg_t const *msg) {
+static bool is_callback_for_msg(sds011_t const *self, sds011_msg_t const *msg) {
   if (self->req.status != SDS011_REQ_STATUS_RUNNING) { return false; }
 
   if (self->req.active.msg.type != msg->type) { return false; }

@@ -6,7 +6,7 @@ static bool validate_dev_id  (sds011_msg_t const *req, sds011_msg_t const *res);
 static bool validate_sleep   (sds011_msg_t const *req, sds011_msg_t const *res);
 static bool validate_op_mode (sds011_msg_t const *req, sds011_msg_t const *res);
 
-static bool (*_validators[SDS011_MSG_TYPE_COUNT])(sds011_msg_t const *req, sds011_msg_t const *res) = {
+static bool (*_validators[(int)SDS011_MSG_TYPE_COUNT])(sds011_msg_t const *req, sds011_msg_t const *res) = {
   NULL, // reserved
   NULL, // reserved
   validate_rep_mode,

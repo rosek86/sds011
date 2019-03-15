@@ -1,19 +1,18 @@
 #include "sds011_fifo.h"
-#include <string.h>
 
-static inline size_t increase(sds011_fifo_t *fifo, size_t iter) {
+static inline size_t increase(sds011_fifo_t const *fifo, size_t iter) {
   return ++iter < fifo->count ? iter : 0;
 }
 
-static inline bool is_empty(sds011_fifo_t *fifo) {
+static inline bool is_empty(sds011_fifo_t const *fifo) {
   return fifo->beg == fifo->end;
 }
 
-static inline bool is_full(sds011_fifo_t *fifo) {
+static inline bool is_full(sds011_fifo_t const *fifo) {
   return increase(fifo, fifo->end) == fifo->beg; 
 }
 
-static inline void* memloc(sds011_fifo_t *fifo, size_t offset) {
+static inline void* memloc(sds011_fifo_t const *fifo, size_t offset) {
   return fifo->mem + (offset * fifo->elsize);
 }
 
@@ -32,16 +31,17 @@ bool sds011_fifo_init(sds011_fifo_t *fifo, size_t elsize, void *mem, size_t size
   return fifo->count > 0;
 }
 
-bool sds011_fifo_push(sds011_fifo_t *fifo, void *el) {
+bool sds011_fifo_push(sds011_fifo_t *fifo, void const *el) {
   if (fifo == NULL || el == NULL) { return false; }
 
   if (is_full(fifo)) {
     return false;
   }
 
-  memcpy(memloc(fifo, fifo->end), el, fifo->elsize);
-  fifo->end = increase(fifo, fifo->end);
+  void *loc = memloc(fifo, fifo->end);
+  memcpy(loc, el, fifo->elsize);
 
+  fifo->end = increase(fifo, fifo->end);
   return true;
 }
 

@@ -1,3 +1,4 @@
+/*lint -e818*/
 #include <stdarg.h>
 #include <stddef.h>
 #include <setjmp.h>
@@ -8,7 +9,7 @@
 
 static sds011_parser_t parser;
 
-static void parse_buffer(uint8_t *buf, size_t size, sds011_msg_t *msg) {
+static void parse_buffer(uint8_t const *buf, size_t size, sds011_msg_t *msg) {
   for (size_t i = 0; i < size - 1; i++) {
     sds011_parser_res_t res = sds011_parser_parse(&parser, buf[i]);
     assert_int_equal(res, SDS011_PARSER_RES_RUNNING);
@@ -64,7 +65,7 @@ static void test_parser_payload_len(void **state) {
   assert_int_equal(sds011_parser_get_error(&parser), SDS011_ERR_PARSER_CMD);
 }
 
-void test_parser_crc(void **state) {
+static void test_parser_crc(void **state) {
   (void) state; /* unused */
   sds011_parser_init(&parser);
 
@@ -92,7 +93,7 @@ void test_parser_crc(void **state) {
   assert_int_equal(sds011_parser_parse(&parser, msg[8]), SDS011_PARSER_RES_RUNNING);
 }
 
-void test_parser_end_frame(void **state) {
+static void test_parser_end_frame(void **state) {
   (void) state; /* unused */
   sds011_parser_init(&parser);
 
@@ -112,7 +113,7 @@ void test_parser_end_frame(void **state) {
   assert_int_equal(sds011_parser_parse(&parser, msg[9]), SDS011_PARSER_RES_READY);
 }
 
-void test_parser_msg_rep_mode_get(void **state) {
+static void test_parser_msg_rep_mode_get(void **state) {
   (void) state; /* unused */
   sds011_parser_init(&parser);
 
@@ -153,7 +154,7 @@ void test_parser_msg_rep_mode_get(void **state) {
   assert_int_equal(msg.data.rep_mode, SDS011_REP_MODE_QUERY);
 }
 
-void test_parser_msg_rep_mode_set(void **state) {
+static void test_parser_msg_rep_mode_set(void **state) {
   (void) state; /* unused */
   sds011_parser_init(&parser);
 
@@ -184,7 +185,7 @@ void test_parser_msg_rep_mode_set(void **state) {
   assert_int_equal(msg.data.rep_mode, SDS011_REP_MODE_QUERY);
 }
 
-void test_parser_msg_sample(void **state) {
+static void test_parser_msg_sample(void **state) {
   (void) state; /* unused */
   sds011_parser_init(&parser);
 
@@ -217,7 +218,7 @@ void test_parser_msg_sample(void **state) {
   assert_int_equal(msg.data.sample.pm10,  2618);
 }
 
-void test_parser_msg_dev_id_set(void **state) {
+static void test_parser_msg_dev_id_set(void **state) {
   (void) state; /* unused */
   sds011_parser_init(&parser);
 
@@ -249,7 +250,7 @@ void test_parser_msg_dev_id_set(void **state) {
   assert_int_equal(msg.src,    SDS011_MSG_SRC_SENSOR);
 }
 
-void test_parser_msg_sleep_set_on(void **state) {
+static void test_parser_msg_sleep_set_on(void **state) {
   (void) state; /* unused */
   sds011_parser_init(&parser);
 
@@ -281,7 +282,7 @@ void test_parser_msg_sleep_set_on(void **state) {
   assert_int_equal(msg.data.sleep, SDS011_SLEEP_ON);
 }
 
-void test_parser_msg_sleep_set_off(void **state) {
+static void test_parser_msg_sleep_set_off(void **state) {
   (void) state; /* unused */
   sds011_parser_init(&parser);
 
@@ -313,7 +314,7 @@ void test_parser_msg_sleep_set_off(void **state) {
   assert_int_equal(msg.data.sleep, SDS011_SLEEP_OFF);
 }
 
-void test_parser_msg_sleep_get(void **state) {
+static void test_parser_msg_sleep_get(void **state) {
   (void) state; /* unused */
   sds011_parser_init(&parser);
 
@@ -351,7 +352,7 @@ void test_parser_msg_sleep_get(void **state) {
   assert_int_equal(msg.data.sleep, SDS011_SLEEP_ON);
 }
 
-void test_parser_msg_fw_ver_get(void **state) {
+static void test_parser_msg_fw_ver_get(void **state) {
   (void) state; /* unused */
   sds011_parser_init(&parser);
 
@@ -384,7 +385,7 @@ void test_parser_msg_fw_ver_get(void **state) {
   assert_int_equal(msg.data.fw_ver.day,   10);
 }
 
-void test_parser_msg_op_mode_set_periodic(void **state) {
+static void test_parser_msg_op_mode_set_periodic(void **state) {
   (void) state; /* unused */
   sds011_parser_init(&parser);
 
@@ -418,7 +419,7 @@ void test_parser_msg_op_mode_set_periodic(void **state) {
   assert_int_equal(msg.data.op_mode.interval, 1);
 }
 
-void test_parser_msg_op_mode_set_continous(void **state) {
+static void test_parser_msg_op_mode_set_continous(void **state) {
   (void) state; /* unused */
   sds011_parser_init(&parser);
 
@@ -452,7 +453,7 @@ void test_parser_msg_op_mode_set_continous(void **state) {
   assert_int_equal(msg.data.op_mode.interval, 0);
 }
 
-void test_parser_msg_op_mode_get(void **state) {
+static void test_parser_msg_op_mode_get(void **state) {
   (void) state; /* unused */
   sds011_parser_init(&parser);
 
@@ -487,7 +488,6 @@ void test_parser_msg_op_mode_get(void **state) {
 static void test_parser_invalid_state(void **state) {
   (void)state; // unused
 
-  sds011_parser_t parser;
   parser.state = 16; // > STATE_END
   assert_int_equal(sds011_parser_parse(&parser, 'a'), SDS011_PARSER_RES_RUNNING);
   assert_int_equal(parser.state, 0);

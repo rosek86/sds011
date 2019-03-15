@@ -17,7 +17,7 @@ typedef struct {
   uint8_t data_iter;
   uint8_t data_crc;
   uint8_t data[SDS011_MAX_DATA_SIZE];
-  uint32_t error;
+  sds011_err_t error;
   sds011_msg_t msg;
 } sds011_parser_t;
 

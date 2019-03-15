@@ -1,3 +1,4 @@
+/*lint -e537 -e708 -e818*/
 #include <stdarg.h>
 #include <stddef.h>
 #include <setjmp.h>
@@ -11,7 +12,7 @@ static uint32_t millis_mock(void) {
   return _millis;
 }
 
-static uint32_t _bytes_available = 0;
+static size_t _bytes_available = 0;
 static size_t bytes_available_mock(void *user_data) {
   (void)user_data;
   return _bytes_available;
@@ -204,11 +205,11 @@ static void test_set_reporting_active(void **state) {
   sds011_t sds011;
   init_sds011(&sds011);
 
-  assert_int_equal(sds011_set_reporting_mode_active(NULL, 0, (sds011_cb_t){NULL, NULL}), SDS011_ERR_INVALID_PARAM);
+  assert_int_equal(sds011_set_rep_mode_active(NULL, 0, (sds011_cb_t){NULL, NULL}), SDS011_ERR_INVALID_PARAM);
 
   send_byte_iter = 0;
   _send_bytes_available = sizeof(send_byte_buffer);
-  assert_int_equal(sds011_set_reporting_mode_active(&sds011, 0xA160, (sds011_cb_t){NULL, NULL}), SDS011_OK);
+  assert_int_equal(sds011_set_rep_mode_active(&sds011, 0xA160, (sds011_cb_t){NULL, NULL}), SDS011_OK);
   assert_int_equal(sds011_process(&sds011), SDS011_OK);
   uint8_t ref[] = {
     0xAA, 0xB4, 0x02, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -223,11 +224,11 @@ static void test_set_reporting_query(void **state) {
   sds011_t sds011;
   init_sds011(&sds011);
 
-  assert_int_equal(sds011_set_reporting_mode_query(NULL, 0, (sds011_cb_t){NULL, NULL}), SDS011_ERR_INVALID_PARAM);
+  assert_int_equal(sds011_set_rep_mode_query(NULL, 0, (sds011_cb_t){NULL, NULL}), SDS011_ERR_INVALID_PARAM);
 
   send_byte_iter = 0;
   _send_bytes_available = sizeof(send_byte_buffer);
-  assert_int_equal(sds011_set_reporting_mode_query(&sds011, 0xA160, (sds011_cb_t){NULL, NULL}), SDS011_OK);
+  assert_int_equal(sds011_set_rep_mode_query(&sds011, 0xA160, (sds011_cb_t){NULL, NULL}), SDS011_OK);
   assert_int_equal(sds011_process(&sds011), SDS011_OK);
   uint8_t ref[] = {
     0xAA, 0xB4, 0x02, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00,
@@ -242,11 +243,11 @@ static void test_get_reporting(void **state) {
   sds011_t sds011;
   init_sds011(&sds011);
 
-  assert_int_equal(sds011_get_reporting_mode(NULL, 0, (sds011_cb_t){NULL, NULL}), SDS011_ERR_INVALID_PARAM);
+  assert_int_equal(sds011_get_rep_mode(NULL, 0, (sds011_cb_t){NULL, NULL}), SDS011_ERR_INVALID_PARAM);
 
   send_byte_iter = 0;
   _send_bytes_available = sizeof(send_byte_buffer);
-  assert_int_equal(sds011_get_reporting_mode(&sds011, 0xFFFF, (sds011_cb_t){NULL, NULL}), SDS011_OK);
+  assert_int_equal(sds011_get_rep_mode(&sds011, 0xFFFF, (sds011_cb_t){NULL, NULL}), SDS011_OK);
   assert_int_equal(sds011_process(&sds011), SDS011_OK);
   uint8_t ref[] = {
     0xAA, 0xB4, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -390,13 +391,12 @@ static void test_get_fw_ver(void **state) {
 
 static uint32_t _cmd_cb_call_cnt;
 static sds011_err_t _cmd_cb_err;
-static sds011_msg_t const *_cmd_cb_msg;
 static void cmd_callback(sds011_err_t err, sds011_msg_t const *msg, void *user_data) {
-  (void) user_data;
+  (void)msg;
+  (void)user_data;
 
   _cmd_cb_call_cnt++;
   _cmd_cb_err = err;
-  _cmd_cb_msg = msg;
 }
 
 static void test_validate_set_result(void **state) {
@@ -652,10 +652,10 @@ static void test_send_invalid_msg(void **state) {
   send_byte_iter = 0;
   _send_bytes_available = sizeof(send_byte_buffer);
 
-  sds011_fifo_push(&sds011.req.queue, &(sds011_request_t) {
+  assert_true(sds011_fifo_push(&sds011.req.queue, &(sds011_request_t) {
     .msg = (sds011_msg_t) {
       .dev_id                 = 0xA160,
-      .type                   = 500,
+      .type                   = (sds011_msg_type_t)500,
       .op                     = SDS011_MSG_OP_SET,
       .src                    = SDS011_MSG_SRC_SENSOR,
       .data.op_mode.mode      = SDS011_OP_MODE_INTERVAL,
@@ -664,7 +664,7 @@ static void test_send_invalid_msg(void **state) {
     .cb = (sds011_cb_t) {
       msg_cb, NULL
     },
-  });
+  }));
   assert_int_equal(sds011_process(&sds011), SDS011_OK);
 
   _msg_cb_called = false;

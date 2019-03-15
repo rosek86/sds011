@@ -2,15 +2,15 @@
 
 #include <string.h>
 
-#define VALUE16(hi, lo) (((uint16_t)(hi) << 8) | (lo))
+#define VALUE16(hi, lo) (((uint16_t)(hi) << 8) | (uint16_t)(lo))
 
-typedef enum {
+enum {
   STATE_BEG,
   STATE_CMD,
   STATE_DATA,
   STATE_CRC,
   STATE_END,
-} state_t;
+};
 
 static void parser_clear(sds011_parser_t *parser);
 
@@ -66,7 +66,6 @@ sds011_parser_res_t sds011_parser_parse(sds011_parser_t *parser, uint8_t byte) {
         return parser_error(parser, SDS011_ERR_PARSER_FRAME_END);
       }
       return parser_completed(parser);
-      break;
     default:
       parser_clear(parser);
       break;
@@ -151,8 +150,8 @@ static sds011_msg_type_t get_msg_type(sds011_parser_t const *parser) {
 }
 
 static sds011_err_t parse_rep_mode(sds011_parser_t const *parser, sds011_msg_t *msg) {
-  uint8_t op = parser->data[1];
-  uint8_t rm = parser->data[2];
+  sds011_msg_op_t   op = (sds011_msg_op_t)  parser->data[1];
+  sds011_rep_mode_t rm = (sds011_rep_mode_t)parser->data[2];
 
   if (op != SDS011_MSG_OP_GET && op != SDS011_MSG_OP_SET) {
     return SDS011_ERR_INVALID_DATA;
@@ -210,8 +209,8 @@ static sds011_err_t parse_dev_id(sds011_parser_t const *parser, sds011_msg_t *ms
 }
 
 static sds011_err_t parse_sleep(sds011_parser_t const *parser, sds011_msg_t *msg) {
-  uint8_t op = parser->data[1];
-  uint8_t sl = parser->data[2];
+  sds011_msg_op_t op = (sds011_msg_op_t)parser->data[1];
+  sds011_sleep_t  sl = (sds011_sleep_t) parser->data[2];
 
   if (op != SDS011_MSG_OP_GET && op != SDS011_MSG_OP_SET) {
     return SDS011_ERR_INVALID_DATA;
@@ -256,7 +255,7 @@ static sds011_err_t parse_fw_ver(sds011_parser_t const *parser, sds011_msg_t *ms
 static sds011_err_t parse_op_mode(sds011_parser_t const *parser, sds011_msg_t *msg) {
   const uint8_t max_interval = 30;
 
-  uint8_t op = parser->data[1];
+  sds011_msg_op_t op = (sds011_msg_op_t)parser->data[1];
   uint8_t interval = parser->data[2];
   uint8_t mode = SDS011_OP_MODE_CONTINOUS;
 

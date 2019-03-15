@@ -1,3 +1,4 @@
+/*lint -e708 -e818*/
 #include <stdarg.h>
 #include <stddef.h>
 #include <setjmp.h>
@@ -11,10 +12,13 @@ static void test_builder_params(void **state) {
   uint8_t buffer[20];
 
   sds011_msg_t msg = {
-    .dev_id               = 0x1234,
-    .type                 = SDS011_MSG_TYPE_REP_MODE,
-    .op                   = SDS011_MSG_OP_GET,
-    .src                  = SDS011_MSG_SRC_HOST
+    .dev_id = 0x1234,
+    .type   = SDS011_MSG_TYPE_REP_MODE,
+    .op     = SDS011_MSG_OP_GET,
+    .src    = SDS011_MSG_SRC_HOST,
+    .data   = { 
+      .rep_mode = SDS011_REP_MODE_ACTIVE,
+    }
   };
 
   // Invalid params
@@ -437,7 +441,7 @@ static void test_builder_missing(void **state) {
   uint8_t buffer[SDS011_REPLY_PACKET_SIZE];
   assert_int_equal(sds011_builder_build(&(sds011_msg_t) {
     .dev_id                 = 0xA160,
-    .type                   = 0,
+    .type                   = (sds011_msg_type_t)0,
     .op                     = SDS011_MSG_OP_GET,
     .src                    = SDS011_MSG_SRC_SENSOR,
     .data.op_mode.mode      = SDS011_OP_MODE_INTERVAL,
@@ -471,7 +475,7 @@ static void test_builder_invalid_src(void **state) {
     .dev_id                 = 0xA160,
     .type                   = SDS011_MSG_TYPE_OP_MODE,
     .op                     = SDS011_MSG_OP_GET,
-    .src                    = 0x7f,
+    .src                    = (sds011_msg_src_t)0x7f,
     .data.op_mode.mode      = SDS011_OP_MODE_INTERVAL,
     .data.op_mode.interval  = 2,
   }, buffer, sizeof(buffer)), 0);

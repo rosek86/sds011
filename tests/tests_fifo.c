@@ -1,3 +1,4 @@
+/*lint -e818*/
 #include "tests.h"
 #include <stdarg.h>
 #include <stddef.h>
@@ -6,12 +7,12 @@
 
 #include "../src/sds011_fifo.h"
 
-void test_init_no_segfault(void **state) {
-  (void) state;
-  sds011_fifo_init(NULL, 0, NULL, 0);
+static void test_init_no_segfault(void **state) {
+  (void)state;
+  assert_false(sds011_fifo_init(NULL, 0, NULL, 0));
 }
 
-void test_init_params(void **state) {
+static void test_init_params(void **state) {
   (void) state;
 
   sds011_fifo_t f, *fifo = &f;
@@ -33,7 +34,7 @@ void test_init_params(void **state) {
   assert_int_equal(fifo->end, 0);
 }
 
-void test_init_count_calcs(void **state) {
+static void test_init_count_calcs(void **state) {
   (void) state;
 
   sds011_fifo_t f, *fifo = &f;
@@ -49,7 +50,7 @@ void test_init_count_calcs(void **state) {
   assert_int_equal(fifo->count, 2);
 }
 
-void test_push_params(void **state) {
+static void test_push_params(void **state) {
   (void)state;
   sds011_fifo_t f, *fifo = &f;
   uint8_t mem[2*sizeof(uint16_t)];
@@ -61,7 +62,7 @@ void test_push_params(void **state) {
   assert_true(sds011_fifo_push(fifo, &v));
 }
 
-void test_pop_params(void **state) {
+static void test_pop_params(void **state) {
   (void)state;
   sds011_fifo_t f, *fifo = &f;
   uint8_t mem[2*sizeof(uint16_t)];
@@ -75,7 +76,7 @@ void test_pop_params(void **state) {
   assert_true (sds011_fifo_pop(fifo, &v));
 }
 
-void test_pop_but_empty(void **state) {
+static void test_pop_but_empty(void **state) {
   (void) state;
 
   sds011_fifo_t f, *fifo = &f;
@@ -85,7 +86,7 @@ void test_pop_but_empty(void **state) {
   assert_false(sds011_fifo_pop(fifo, &v2));
 }
 
-void test_push_but_full(void **state) {
+static void test_push_but_full(void **state) {
   (void) state;
 
   sds011_fifo_t f, *fifo = &f;
@@ -100,7 +101,7 @@ void test_push_but_full(void **state) {
   assert_false(sds011_fifo_push(fifo, &v2));
 }
 
-void test_push_pop(void **state) {
+static void test_push_pop(void **state) {
   (void) state;
 
   sds011_fifo_t f, *fifo = &f;
@@ -120,7 +121,7 @@ void test_push_pop(void **state) {
   assert_int_equal(v1, v2);
 }
 
-void test_circular_buffer(void **state) {
+static void test_circular_buffer(void **state) {
   (void) state;
 
   sds011_fifo_t f, *fifo = &f;

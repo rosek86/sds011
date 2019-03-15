@@ -113,7 +113,7 @@ sds011_err_t sds011_set_device_id(sds011_t *self, uint16_t dev_id, uint16_t new_
  * @param cb callback executed on sensor response or when error occurs
  * @return SDS011_OK on success, otherwise error code
  */
-sds011_err_t sds011_set_reporting_mode_active(sds011_t *self, uint16_t dev_id, sds011_cb_t cb);
+sds011_err_t sds011_set_rep_mode_active(sds011_t *self, uint16_t dev_id, sds011_cb_t cb);
 
 /**
  * Set manual (query) reporting mode
@@ -122,7 +122,7 @@ sds011_err_t sds011_set_reporting_mode_active(sds011_t *self, uint16_t dev_id, s
  * @param cb callback executed on sensor response or when error occurs
  * @return SDS011_OK on success, otherwise error code
  */
-sds011_err_t sds011_set_reporting_mode_query(sds011_t *self, uint16_t dev_id, sds011_cb_t cb);
+sds011_err_t sds011_set_rep_mode_query(sds011_t *self, uint16_t dev_id, sds011_cb_t cb);
 
 /**
  * Get reporting mode. The reporting mode can be retrieved from the callback message parameter.
@@ -131,7 +131,7 @@ sds011_err_t sds011_set_reporting_mode_query(sds011_t *self, uint16_t dev_id, sd
  * @param cb callback executed on sensor response or when error occurs
  * @return SDS011_OK on success, otherwise error code
  */
-sds011_err_t sds011_get_reporting_mode(sds011_t *self, uint16_t dev_id, sds011_cb_t cb);
+sds011_err_t sds011_get_rep_mode(sds011_t *self, uint16_t dev_id, sds011_cb_t cb);
 
 /**
  * Turn on the sleep mode

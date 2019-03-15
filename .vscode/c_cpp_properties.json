@@ -3,8 +3,7 @@
         {
             "name": "Mac",
             "includePath": [
-                "/Users/krzysiek/Library/Arduino15/packages/esp8266/tools/**",
-                "/Users/krzysiek/Library/Arduino15/packages/esp8266/hardware/esp8266/2.4.2/**"
+                "/usr/local/include/"
             ],
             "forcedInclude": [],
             "macFrameworkPath": [

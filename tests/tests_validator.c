@@ -1,3 +1,4 @@
+/*lint -e818*/
 #include <stdarg.h>
 #include <stddef.h>
 #include <setjmp.h>
@@ -15,39 +16,38 @@ static void test_validate(void **state) {
 
   // req.type != res.type
   assert_int_equal(sds011_validator_validate(&(sds011_msg_t) {
-    .type = 1,
+    .type = SDS011_MSG_TYPE_REP_MODE,
   }, &(sds011_msg_t) {
-    .type = 0,
+    .type = SDS011_MSG_TYPE_DATA,
   }), false);
 
   // req.op ! = res.op
   assert_int_equal(sds011_validator_validate(&(sds011_msg_t) {
-    .type = 1,
-    .op   = 0,
+    .type = SDS011_MSG_TYPE_REP_MODE,
+    .op   = SDS011_MSG_OP_GET,
   }, &(sds011_msg_t) {
-    .type = 1,
-    .op   = 1,
+    .type = SDS011_MSG_TYPE_REP_MODE,
+    .op   = SDS011_MSG_OP_SET,
   }), false);
 
   // req->op == SDS011_MSG_OP_GE
   assert_int_equal(sds011_validator_validate(&(sds011_msg_t) {
-    .type = 1,
+    .type = SDS011_MSG_TYPE_REP_MODE,
     .op   = SDS011_MSG_OP_GET,
   }, &(sds011_msg_t) {
-    .type = 1,
+    .type = SDS011_MSG_TYPE_REP_MODE,
     .op   = SDS011_MSG_OP_GET,
   }), true);
-
 }
 
 static void test_no_validator_function(void **state) {
   (void) state; /* unused */
 
   assert_int_equal(sds011_validator_validate(&(sds011_msg_t) {
-    .type = 1,
+    .type = SDS011_MSG_TYPE_REP_MODE,
     .op   = SDS011_MSG_OP_SET,
   }, &(sds011_msg_t) {
-    .type = 1,
+    .type = SDS011_MSG_TYPE_REP_MODE,
     .op   = SDS011_MSG_OP_SET,
   }), true);
 }

@@ -3,6 +3,9 @@
     ".screenrc": "bat",
     "setjmp.h": "c",
     "sds011_parser.h": "c",
-    "cmocka.h": "c"
+    "cmocka.h": "c",
+    "sds011_fifo.h": "c",
+    "stddef.h": "c",
+    "stdint.h": "c"
   }
 }

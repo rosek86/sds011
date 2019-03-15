@@ -1,7 +1,7 @@
 #include "sds011_builder.h"
 
-#define MSB(v) (((v) & 0xFF00) >> 8)
-#define LSB(v) (((v) & 0x00FF) >> 0)
+#define MSB(v) (uint8_t)(((v) & 0xFF00) >> 8)
+#define LSB(v) (uint8_t)(((v) & 0x00FF))
 
 static sds011_err_t _error = SDS011_OK;
 
@@ -18,7 +18,7 @@ static size_t build_host_fw_ver  (sds011_msg_t const *msg, uint8_t *buf);
 static size_t build_sens_op_mode (sds011_msg_t const *msg, uint8_t *buf);
 static size_t build_host_op_mode (sds011_msg_t const *msg, uint8_t *buf);
 
-static size_t (*_builder_host[2][SDS011_MSG_TYPE_COUNT])(sds011_msg_t const *msg, uint8_t *buf) = {
+static size_t (*_builder_host[2][(int)SDS011_MSG_TYPE_COUNT])(sds011_msg_t const *msg, uint8_t *buf) = {
   {
     NULL, // reserved
     NULL, // reserved
@@ -76,11 +76,11 @@ static size_t build_sens_rep_mode(sds011_msg_t const *msg, uint8_t *buf) {
   uint8_t crc = 0;
   buf[0] = SDS011_FRAME_BEG;
   buf[1] = SDS011_CMD_REPLY;
-  buf[2] = SDS011_MSG_TYPE_REP_MODE; crc += buf[2];
-  buf[3] = msg->op;                  crc += buf[3];
-  buf[4] = msg->data.rep_mode;       crc += buf[4];
-  buf[6] = MSB(msg->dev_id);         crc += buf[6];
-  buf[7] = LSB(msg->dev_id);         crc += buf[7];
+  buf[2] = SDS011_MSG_TYPE_REP_MODE;    crc += buf[2];
+  buf[3] = (uint8_t)msg->op;            crc += buf[3];
+  buf[4] = (uint8_t)msg->data.rep_mode; crc += buf[4];
+  buf[6] = MSB(msg->dev_id);            crc += buf[6];
+  buf[7] = LSB(msg->dev_id);            crc += buf[7];
   buf[8] = crc;
   buf[9] = SDS011_FRAME_END;
   return SDS011_REPLY_PACKET_SIZE;
@@ -90,13 +90,13 @@ static size_t build_host_rep_mode(sds011_msg_t const *msg, uint8_t *buf) {
   uint8_t crc = 0;
   buf[0]  = SDS011_FRAME_BEG;
   buf[1]  = SDS011_CMD_QUERY;
-  buf[2]  = SDS011_MSG_TYPE_REP_MODE;   crc += buf[2];
-  buf[3]  = msg->op;                    crc += buf[3];
+  buf[2]  = SDS011_MSG_TYPE_REP_MODE;     crc += buf[2];
+  buf[3]  = (uint8_t)msg->op;             crc += buf[3];
   if (msg->op == SDS011_MSG_OP_SET) {
-    buf[4]  = msg->data.rep_mode;       crc += buf[4];
+    buf[4] = (uint8_t)msg->data.rep_mode; crc += buf[4];
   }
-  buf[15] = MSB(msg->dev_id);           crc += buf[15];
-  buf[16] = LSB(msg->dev_id);           crc += buf[16];
+  buf[15] = MSB(msg->dev_id);             crc += buf[15];
+  buf[16] = LSB(msg->dev_id);             crc += buf[16];
   buf[17] = crc;
   buf[18] = SDS011_FRAME_END;
   return SDS011_QUERY_PACKET_SIZE;
@@ -133,7 +133,7 @@ static size_t build_sens_dev_id(sds011_msg_t const *msg, uint8_t *buf) {
   uint8_t crc = 0;
   buf[0] = SDS011_FRAME_BEG;
   buf[1] = SDS011_CMD_REPLY;
-  buf[2]  = SDS011_MSG_TYPE_DEV_ID; crc += buf[2];
+  buf[2] = SDS011_MSG_TYPE_DEV_ID;  crc += buf[2];
   buf[6] = MSB(msg->dev_id);        crc += buf[6];
   buf[7] = LSB(msg->dev_id);        crc += buf[7];
   buf[8] = crc;
@@ -159,11 +159,11 @@ static size_t build_sens_sleep(sds011_msg_t const *msg, uint8_t *buf) {
   uint8_t crc = 0;
   buf[0] = SDS011_FRAME_BEG;
   buf[1] = SDS011_CMD_REPLY;
-  buf[2] = SDS011_MSG_TYPE_SLEEP;   crc += buf[2];
-  buf[3] = msg->op;                 crc += buf[3];
-  buf[4] = msg->data.sleep;         crc += buf[4];
-  buf[6] = MSB(msg->dev_id);        crc += buf[6];
-  buf[7] = LSB(msg->dev_id);        crc += buf[7];
+  buf[2] = SDS011_MSG_TYPE_SLEEP;     crc += buf[2];
+  buf[3] = (uint8_t)msg->op;          crc += buf[3];
+  buf[4] = (uint8_t)msg->data.sleep;  crc += buf[4];
+  buf[6] = MSB(msg->dev_id);          crc += buf[6];
+  buf[7] = LSB(msg->dev_id);          crc += buf[7];
   buf[8] = crc;
   buf[9] = SDS011_FRAME_END;
   return SDS011_REPLY_PACKET_SIZE;
@@ -173,13 +173,13 @@ static size_t build_host_sleep(sds011_msg_t const *msg, uint8_t *buf) {
   uint8_t crc = 0;
   buf[0]  = SDS011_FRAME_BEG;
   buf[1]  = SDS011_CMD_QUERY;
-  buf[2]  = SDS011_MSG_TYPE_SLEEP;    crc += buf[2];
-  buf[3]  = msg->op;                  crc += buf[3];
+  buf[2]  = SDS011_MSG_TYPE_SLEEP;      crc += buf[2];
+  buf[3]  = (uint8_t)msg->op;           crc += buf[3];
   if (msg->op == SDS011_MSG_OP_SET) {
-    buf[4]  = msg->data.sleep;        crc += buf[4];
+    buf[4] = (uint8_t)msg->data.sleep;  crc += buf[4];
   }
-  buf[15] = MSB(msg->dev_id);         crc += buf[15];
-  buf[16] = LSB(msg->dev_id);         crc += buf[16];
+  buf[15] = MSB(msg->dev_id);           crc += buf[15];
+  buf[16] = LSB(msg->dev_id);           crc += buf[16];
   buf[17] = crc;
   buf[18] = SDS011_FRAME_END;
   return SDS011_QUERY_PACKET_SIZE;
@@ -217,7 +217,7 @@ static size_t build_sens_op_mode(sds011_msg_t const *msg, uint8_t *buf) {
   buf[0] = SDS011_FRAME_BEG;
   buf[1] = SDS011_CMD_REPLY;
   buf[2] = SDS011_MSG_TYPE_OP_MODE;       crc += buf[2];
-  buf[3] = msg->op;                       crc += buf[3];
+  buf[3] = (uint8_t)msg->op;              crc += buf[3];
 
   if (msg->data.op_mode.mode == SDS011_OP_MODE_CONTINOUS) {
     buf[4] = 0;                           crc += buf[4];
@@ -237,7 +237,7 @@ static size_t build_host_op_mode(sds011_msg_t const *msg, uint8_t *buf) {
   buf[0] = SDS011_FRAME_BEG;
   buf[1] = SDS011_CMD_QUERY;
   buf[2] = SDS011_MSG_TYPE_OP_MODE;         crc += buf[2];
-  buf[3] = msg->op;                         crc += buf[3];
+  buf[3] = (uint8_t)msg->op;                crc += buf[3];
   if (msg->op == SDS011_MSG_OP_SET) {
     if (msg->data.op_mode.mode == SDS011_OP_MODE_CONTINOUS) {
       buf[4] = 0;                           crc += buf[4];
