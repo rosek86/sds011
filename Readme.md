@@ -27,41 +27,34 @@ More information can be found in the `examples/example.c` file.
 
 ## Dependencies
 
-The library itself doesn't require any dependencies apart of the standard C library. However, to compile example or tests cmake and cmocka are required. Examples and tests compilation has been tested on the Ubuntu 18.4 and macOS Mojave.
+The library itself doesn't require any dependencies apart of the standard C library. However, to compile example or tests a few additional dependencies are required. Compilation has been tested on the Ubuntu 18.4 and macOS Mojave.
 
 Ubuntu:
 ```bash
 sudo apt install cmake
 sudo apt install libcmocka-dev
 sudo apt install lcov
+sudo apt install doxygen
 ```
 
-OSX (using brew):
+OSX:
 ```bash
 ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)" < /dev/null 2> /dev/null
 brew install cmake
 brew install cmocka
 brew install lcov
+brew install doxygen
 ```
 
-## Build Examples
+## Build
 
 ```bash
-mkdir -p ./examples/build
-cd ./examples/build
-cmake ..
-make
-./example
-```
-
-## Build Tests
-
-```bash
-mkdir -p ./tests/build
-cd ./tests/build
+mkdir ./build
+cd ./build
 cmake ..
 make
 make test
 make coverage
-open ./out/index.html
+open ./tests/coverage/index.html
+./examples/example
 ```

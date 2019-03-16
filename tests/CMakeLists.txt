@@ -37,7 +37,7 @@ add_custom_target(test
 
 add_custom_target(coverage
   COMMAND lcov --capture --directory . --output-file coverage.info --rc lcov_branch_coverage=1
-  COMMAND genhtml coverage.info --output-directory out --rc lcov_branch_coverage=1
+  COMMAND genhtml coverage.info --output-directory coverage --rc lcov_branch_coverage=1
   COMMAND lcov -v
 )
 

@@ -1,3 +1,6 @@
 /tests/build
 /examples/build
 /docs
+/html
+/latex
+/build
