@@ -35,6 +35,7 @@ sudo apt install cmake
 sudo apt install libcmocka-dev
 sudo apt install lcov
 sudo apt install doxygen
+sudo apt install ninja
 ```
 
 OSX:
@@ -44,6 +45,7 @@ brew install cmake
 brew install cmocka
 brew install lcov
 brew install doxygen
+brew install ninja
 ```
 
 ## Build
@@ -51,10 +53,10 @@ brew install doxygen
 ```bash
 mkdir ./build
 cd ./build
-cmake ..
-make
-make test
-make coverage
+cmake -GNinja ..
+cmake --build .
+ninja test
+ninja coverage
 open ./tests/coverage/index.html
 ./examples/example
 ```

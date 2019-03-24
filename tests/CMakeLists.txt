@@ -1,13 +1,7 @@
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.14)
 project(tests)
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -std=c11 -g -O0")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fprofile-arcs -ftest-coverage")
-
-find_library(CMOCKA_LIB cmocka)
-find_path(CMOCKA_INC cmocka.h)
-
-include_directories(${CMOCKA_INC})
+find_package(CMOCKA REQUIRED)
 
 add_executable(tests
   ../src/sds011_parser.c    ./tests_parser.c
@@ -18,8 +12,14 @@ add_executable(tests
   ./tests.c
 )
 
-# enable_testing()
-# add_test(tests ./tests)
+target_include_directories(tests PRIVATE ${CMOCKA_INCLUDE_DIR})
+
+target_compile_options(tests PRIVATE -Wall -Wextra -pedantic)
+target_compile_options(tests PRIVATE -std=c11)
+target_compile_options(tests PRIVATE -g -O0)
+target_compile_options(tests PRIVATE -fprofile-arcs -ftest-coverage)
+
+target_link_options(tests PRIVATE -fprofile-arcs -ftest-coverage)
 
 # add_custom_command(TARGET tests
 #   POST_BUILD
@@ -41,4 +41,4 @@ add_custom_target(coverage
   COMMAND lcov -v
 )
 
-target_link_libraries(tests ${CMOCKA_LIB})
+target_link_libraries(tests ${CMOCKA_LIBRARIES})

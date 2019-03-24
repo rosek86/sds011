@@ -521,11 +521,11 @@ static void test_set_callback(void **state) {
   (void)state; // unused
 
   assert_int_equal(sds011_set_sample_callback(
-    NULL, (sds011_on_sample_t) {}), SDS011_ERR_INVALID_PARAM);
+    NULL, (sds011_on_sample_t) { .callback = NULL }), SDS011_ERR_INVALID_PARAM);
 
   sds011_t sds011;
   assert_int_equal(sds011_set_sample_callback(
-    &sds011, (sds011_on_sample_t) {}), SDS011_OK);
+    &sds011, (sds011_on_sample_t) { .callback = NULL }), SDS011_OK);
 }
 
 static void test_process_error(void **state) {

@@ -1,12 +1,17 @@
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.14)
 project(examples)
-
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -std=c11")
 
 add_executable(parser_example
   ../src/sds011_parser.c
   ./parser_example.c
 )
+
+target_compile_options(parser_example PRIVATE -Wall -Wextra -pedantic)
+target_compile_options(parser_example PRIVATE -std=c11)
+target_compile_options(parser_example PRIVATE -g -O0)
+target_compile_options(parser_example PRIVATE -fprofile-arcs -ftest-coverage)
+
+target_link_options(parser_example PRIVATE -fprofile-arcs -ftest-coverage)
 
 add_executable(example
   ../src/sds011_fifo.c
@@ -16,3 +21,10 @@ add_executable(example
   ../src/sds011.c
   ./example.c
 )
+
+target_compile_options(example PRIVATE -Wall -Wextra -pedantic)
+target_compile_options(example PRIVATE -std=c11)
+target_compile_options(example PRIVATE -g -O0)
+target_compile_options(example PRIVATE -fprofile-arcs -ftest-coverage)
+
+target_link_options(example PRIVATE -fprofile-arcs -ftest-coverage)
