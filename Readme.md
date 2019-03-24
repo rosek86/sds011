@@ -30,22 +30,27 @@ More information can be found in the `examples/example.c` file.
 The library itself doesn't require any dependencies apart of the standard C library. However, to compile example or tests a few additional dependencies are required. Compilation has been tested on the Ubuntu 18.4 and macOS Mojave.
 
 Ubuntu:
+
+NOTE(24/03/2019): cmake@3.14 has to be installed from source.
+
 ```bash
-sudo apt install cmake
+sudo apt install ninja
 sudo apt install libcmocka-dev
 sudo apt install lcov
 sudo apt install doxygen
-sudo apt install ninja
 ```
 
 OSX:
+
+Using Homebrew https://brew.sh/
+
 ```bash
-ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)" < /dev/null 2> /dev/null
+brew update
 brew install cmake
+brew install ninja
 brew install cmocka
 brew install lcov
 brew install doxygen
-brew install ninja
 ```
 
 ## Build
