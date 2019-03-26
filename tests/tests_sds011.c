@@ -729,7 +729,7 @@ static void test_other_msg_op_during_request(void **state) {
   assert_false(_msg_cb_called);
 }
 
-int tests_sds011(void) {
+int main(void) {
   const struct CMUnitTest tests[] = {
     cmocka_unit_test(test_init),
     cmocka_unit_test(test_query_data),

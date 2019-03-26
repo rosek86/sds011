@@ -483,7 +483,7 @@ static void test_builder_invalid_src(void **state) {
   assert_int_equal(sds011_builder_get_error(), SDS011_ERR_INVALID_SRC);
 }
 
-int tests_builder(void) {
+int main(void) {
   const struct CMUnitTest tests[] = {
     cmocka_unit_test(test_builder_params),
     cmocka_unit_test(test_builder_rep_mode_get),

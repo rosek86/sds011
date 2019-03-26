@@ -201,7 +201,7 @@ static void test_validate_op_mode(void **state) {
   }), false);
 }
 
-int tests_validator(void) {
+int main(void) {
   const struct CMUnitTest tests[] = {
     cmocka_unit_test(test_validate),
     cmocka_unit_test(test_no_validator_function),

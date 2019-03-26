@@ -590,7 +590,7 @@ static void test_parser_op_mode_invalid_data(void **state) {
   assert_int_equal(sds011_parser_get_error(&parser), SDS011_ERR_INVALID_DATA);
 }
 
-int tests_parser(void) {
+int main(void) {
   const struct CMUnitTest tests[] = {
     cmocka_unit_test(test_parser_sync_byte),
     cmocka_unit_test(test_parser_payload_len),

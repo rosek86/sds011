@@ -1,9 +1,7 @@
 cmake_minimum_required(VERSION 3.14)
-project(examples)
 
 add_executable(parser_example
-  ../src/sds011_parser.c
-  ./parser_example.c
+  ../src/sds011_parser.c ./parser_example.c
 )
 
 set_property(TARGET parser_example PROPERTY C_STANDARD 11)

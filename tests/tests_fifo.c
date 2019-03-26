@@ -1,5 +1,4 @@
 /*lint -e818*/
-#include "tests.h"
 #include <stdarg.h>
 #include <stddef.h>
 #include <setjmp.h>
@@ -148,7 +147,7 @@ static void test_circular_buffer(void **state) {
   assert_int_equal(v1, v2);
 }
 
-int tests_fifo(void) {
+int main(void) {
   const struct CMUnitTest tests[] = {
     cmocka_unit_test(test_init_no_segfault),
     cmocka_unit_test(test_init_params),
