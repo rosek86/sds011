@@ -7,15 +7,15 @@
       "label": "bootstrap",
       "type": "shell",
       "command": [
-        "mkdir -p ./tests/build/ && cd ./tests/build/ && cmake .."
+        "mkdir -p ./build/ && cd ./build/ && cmake -GNinja .."
       ],
       "group": "build"
     },
     {
       "label": "build",
       "type": "shell",
-      "command": "make",
-      "options": { "cwd": "./tests/build/" },
+      "command": "cmake --build .",
+      "options": { "cwd": "./build/" },
       "group":{
         "kind": "build",
         "isDefault": true
@@ -24,8 +24,8 @@
     {
       "label": "test",
       "type": "shell",
-      "command": "make test",
-      "options": { "cwd": "./tests/build" },
+      "command": "ctest",
+      "options": { "cwd": "./build" },
       "group": {
         "kind": "test",
         "isDefault": true
@@ -34,8 +34,8 @@
     {
       "label": "coverage",
       "type": "shell",
-      "command": "make coverage",
-      "options": { "cwd": "./tests/build" },
+      "command": "cmake --build . --target coverage",
+      "options": { "cwd": "./build" },
       "group": "test"
     }
   ]
