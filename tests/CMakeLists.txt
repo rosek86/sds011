@@ -12,14 +12,24 @@ add_executable(tests
   ./tests.c
 )
 
+set_property(TARGET tests PROPERTY C_STANDARD 11)
+
 target_include_directories(tests PRIVATE ${CMOCKA_INCLUDE_DIR})
 
 target_compile_options(tests PRIVATE -Wall -Wextra -pedantic)
-target_compile_options(tests PRIVATE -std=c11)
 target_compile_options(tests PRIVATE -g -O0)
-target_compile_options(tests PRIVATE -fprofile-arcs -ftest-coverage)
 
+target_compile_options(tests PRIVATE -fprofile-arcs -ftest-coverage)
 target_link_options(tests PRIVATE -fprofile-arcs -ftest-coverage)
+
+add_test(NAME setup COMMAND lcov --zerocounters --directory .)
+set_tests_properties(setup PROPERTIES FIXTURES_SETUP my-fixture)
+
+add_test(NAME test_all COMMAND ./tests)
+set_tests_properties(test_all PROPERTIES FIXTURES_REQUIRED my-fixture)
+
+add_test(NAME cleanup COMMAND echo "cleanup")
+set_tests_properties(cleanup PROPERTIES FIXTURES_CLEANUP my-fixture)
 
 # add_custom_command(TARGET tests
 #   POST_BUILD
@@ -29,11 +39,6 @@ target_link_options(tests PRIVATE -fprofile-arcs -ftest-coverage)
 #   COMMAND genhtml coverage.info --output-directory out --rc lcov_branch_coverage=1
 #   COMMAND lcov -v
 # )
-
-add_custom_target(test
-  COMMAND lcov --zerocounters --directory . || true
-  COMMAND ./tests
-)
 
 add_custom_target(coverage
   COMMAND lcov --capture --directory . --output-file coverage.info --rc lcov_branch_coverage=1

@@ -6,11 +6,12 @@ add_executable(parser_example
   ./parser_example.c
 )
 
-target_compile_options(parser_example PRIVATE -Wall -Wextra -pedantic)
-target_compile_options(parser_example PRIVATE -std=c11)
-target_compile_options(parser_example PRIVATE -g -O0)
-target_compile_options(parser_example PRIVATE -fprofile-arcs -ftest-coverage)
+set_property(TARGET parser_example PROPERTY C_STANDARD 11)
 
+target_compile_options(parser_example PRIVATE -Wall -Wextra -pedantic)
+target_compile_options(parser_example PRIVATE -g -O0)
+
+target_compile_options(parser_example PRIVATE -fprofile-arcs -ftest-coverage)
 target_link_options(parser_example PRIVATE -fprofile-arcs -ftest-coverage)
 
 add_executable(example
@@ -22,9 +23,10 @@ add_executable(example
   ./example.c
 )
 
-target_compile_options(example PRIVATE -Wall -Wextra -pedantic)
-target_compile_options(example PRIVATE -std=c11)
-target_compile_options(example PRIVATE -g -O0)
-target_compile_options(example PRIVATE -fprofile-arcs -ftest-coverage)
+set_property(TARGET example PROPERTY C_STANDARD 11)
 
+target_compile_options(example PRIVATE -Wall -Wextra -pedantic)
+target_compile_options(example PRIVATE -g -O0)
+
+target_compile_options(example PRIVATE -fprofile-arcs -ftest-coverage)
 target_link_options(example PRIVATE -fprofile-arcs -ftest-coverage)

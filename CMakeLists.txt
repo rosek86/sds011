@@ -3,6 +3,5 @@ project(sds011)
 
 add_subdirectory(./examples)
 
-# enable_testing()
-# add_test(NAME UnitTests COMMAND ./tests/tests)
+enable_testing()
 add_subdirectory(./tests)

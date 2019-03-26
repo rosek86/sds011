@@ -60,8 +60,8 @@ mkdir ./build
 cd ./build
 cmake -GNinja ..
 cmake --build .
-ninja test
-ninja coverage
+ctest -VV
+cmake --build . --target coverage
 open ./tests/coverage/index.html
 ./examples/example
 ```
