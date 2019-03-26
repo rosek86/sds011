@@ -37,6 +37,7 @@ NOTE(24/03/2019): cmake@3.14 has to be installed from source.
 sudo apt install ninja
 sudo apt install libcmocka-dev
 sudo apt install lcov
+sudo apt install cppcheck
 sudo apt install doxygen
 ```
 
@@ -50,17 +51,18 @@ brew install cmake
 brew install ninja
 brew install cmocka
 brew install lcov
+brew install cppcheck
 brew install doxygen
 ```
 
 ## Build
 
 ```bash
-mkdir ./build
+cmake -GNinja -H. -B ./build
 cd ./build
-cmake -GNinja ..
 cmake --build .
 ctest
+cmake --build . --target lint
 cmake --build . --target coverage
 open ./tests/coverage/index.html
 ./examples/example

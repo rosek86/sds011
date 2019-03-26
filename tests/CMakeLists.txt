@@ -29,7 +29,8 @@ add_custom_target(coverage-zerocounters
 
 add_custom_target(coverage
   COMMAND lcov --capture --directory . --output-file coverage.info --rc lcov_branch_coverage=1
-  COMMAND genhtml coverage.info --output-directory coverage --rc lcov_branch_coverage=1
+  COMMAND genhtml --output-directory coverage --num-spaces 2 --sort --title sds011
+    --function-coverage --branch-coverage --legend coverage.info
   COMMAND lcov -v
 )
 
